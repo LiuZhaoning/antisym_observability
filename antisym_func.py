@@ -137,15 +137,15 @@ def dsigma_dk(k,R):
 result = integrate.quad(dsigma_dk, lower_limit, upper_limit,(R))
 sigma_norm = SIGMA8 / (result[0] ** 0.5)
 
-def power_in_k(k):
+def power_in_k(k):#the power spectrum of matter density at z=0
     T = TFmdm(k)
     if (P_CUTOFF):
         T *= pow(1 + pow(BODE_e*k*R_CUTOFF, 2*BODE_v), -BODE_n/BODE_v)
     p = pow(k, POWER_INDEX) * T * T;
-    return p * (2 * math.pi * math.pi) * (sigma_norm * sigma_norm);
-
+    return p * (2 * math.pi * math.pi) * (sigma_norm * sigma_norm)
 vec_power = np.vectorize(power_in_k)
 
+#extend the power spectrum to the small scale
 def largek_extention(k, A, alpha): #xi_extend(r) = A * r ^ alpha
     return A * k ** alpha
 vec_larger_extention = np.vectorize(largek_extention)
@@ -155,11 +155,13 @@ def MtoR(M):
     return pow(3 * M / (4 * math.pi * rho_bar), 1.0 / 3.0)
 vec_MtoR = np.vectorize(MtoR)
 
+#the mass of bubbles with radius R and average matter density
 def RtoM(R):
     M = 4.0 / 3.0 * math.pi * pow(R,3) * rho_bar
     return M
 M_max = RtoM(50) #default
 
+#the variance square of the overdensity of bubbles with mass M 
 def S(M):
     R = (M / (6 * np.pi ** 2 * rho_bar)) ** (1.0 / 3) #this R is only for estimation of k-space cutoff
     def integrand(k):
@@ -167,6 +169,7 @@ def S(M):
     sig2 = 1 / (2 * math.pi * math.pi) * integrate.quad(integrand, 0, 1 / R, epsrel=1e-5)[0] #I set a upper limit since the calculation of inf cost too much time
     return sig2
 
+#the variance of the overdensity of bubbles with mass M 
 def sigma(M):
     return S(M) ** 0.5
     
@@ -177,7 +180,8 @@ def Deltac_nonlinear(z):
     d = omega_mz(z) -1.0
     return 18 * np.pi * np.pi - 39 * d * d
 
-def TtoM(z, T, mu):
+#the virial temperature to the minimum mass of ionizing halos
+def TtoM(z, T, mu): #in sun_mass
     return 7030.97 / hlittle * ( omega_mz(z) / (OMm*Deltac_nonlinear(z))) ** 0.5 * pow( T/(mu * (1+z)),1.5)
 
 #calculate H(z)
@@ -266,6 +270,7 @@ def FgtrM_st(z,M):
     result = integrate.quad(dFdlnM_st, lower_limit, upper_limit, epsrel = 1e-3,args = (z))
     return result[0] / (rho_bar)
 
+#the collapsed fraction in ST method
 def f_coll_st(z, T, mu):
     M_min = TtoM(z, T, mu)
     f_coll = FgtrM_st(z, M_min)
@@ -370,7 +375,8 @@ def BMF(m, PARA): #the redshift information is in PARA
     return integrate.quad(integrand_BMF, -6*(s0**0.5), delta_cross, epsrel = 1e-5)[0]
 vec_BMF = np.vectorize(BMF)
 
-def Max_Bubble_fraction(PARA):# the fraction of the bubble at M_max
+# the fraction of the bubbles of M_max in the total mass
+def Max_Bubble_fraction(PARA):
     [s0, B0, B1] = PARA
     delta_cross = B0 + B1 * s0
     t_cross = delta_cross / ((2 * s0) ** 0.5)
@@ -436,12 +442,14 @@ def HIrho_over_rho0(z, zeta_z_func, T_vir, mu, M_max):
 def T_21_tilde(z): # in muK
     return 27 * ( ((1+z)/10) * (0.15/OMm/hlittle/hlittle)) ** 0.5 * (OMb * hlittle * hlittle / 0.023) *1e3
 
+#the average CO temperature at redshift z   
 def T_CO_bar(z, T_vir, mu): # in muK
     delta_c_z = delta_c / dicke(z)
     M_min = TtoM(z, T_vir, mu)
     f_coll = special.erfc(delta_c_z / (pow(2,0.5) * sigma_z0(M_min)))
     return 59.4 * (1+z) ** 0.5 * f_coll
 
+#the average CO bias at redshift z
 def Bias_CO(z, T_vir, mu):
     M_min = TtoM(z, T_vir ,mu)
     growth_factor = dicke(z)
