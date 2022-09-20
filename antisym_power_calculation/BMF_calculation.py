@@ -1,7 +1,4 @@
 import numpy as np
-import math
-import matplotlib 
-from matplotlib import pyplot as plt
 from scipy import integrate
 from scipy import special
 from scipy.interpolate import interp1d, interp2d
@@ -13,9 +10,9 @@ import sys
 import mpmath
 import os
 from multiprocessing import Pool
-import antisym_func
+import ../antisym_func
 from BMF_calculation_function import BMF_z
-
+#test
 if __name__ == '__main__':
     #put in the number of cores for multiprocessing
     zeta = float(sys.argv[1])
@@ -23,25 +20,14 @@ if __name__ == '__main__':
     R_mfp = float(sys.argv[3])
     NUM_CORE = int(sys.argv[4])
 
-    plt.rcParams['xtick.direction'] = 'in'
-    plt.rcParams['ytick.direction'] = 'in'
-
-    #the parameters are choosed to match the history of the black line in Zhou et al. 2021
-    
-    eta = 0.5
+    #parameters used in the computation
+    eta = 0.5 #the limit where we overlook the correlation outside bubbles
     M_max = antisym_func.RtoM(R_mfp)
-
-    if (T_vir < 9.99999e3):
-        mu = 1.22
-    else:
-        mu = 0.6
-
-
-    # In[2]:
-
+    mu = 1.22 if T_vir < 9.99999e3 else 0.6
+    SMOOTHING_SCALE = 300 #Mpc
 
     #calculate some of the zeta_z points to do interpolation
-    NUM = 100
+    NUM = 50
     z_zeta_interp_array = np.linspace(5.5, 13.5, NUM)
     zeta_z_interp_array = []
     for i in range(NUM):
@@ -49,41 +35,18 @@ if __name__ == '__main__':
     #zeta(z) interpolation
     zeta_z_func = interp1d(z_zeta_interp_array, zeta_z_interp_array, kind = 'cubic')
 
-    #read in the history of Zhou et al. (2021)
-    z_HI = np.loadtxt('/home/liuzhaoning/antisym/antisym_parameters/cal_mid_data/zhou/history/history_z.txt')
-    HI_zhou = np.loadtxt('/home/liuzhaoning/antisym/antisym_parameters/cal_mid_data/zhou/history/history_HI_cyan.txt')
-    [z_dxHdz, dxHdz_zhou] = antisym_func.dxH_dz_cal(z_HI, HI_zhou)
-
     #calculate the history
     HI_ana = []
     for z in z_HI:
         HI_ana.append(1 - antisym_func.bar_Q(z, M_max, zeta_z_func, T_vir, mu, antisym_func.PARA_z(z, M_max, zeta_z_func, T_vir, mu)))
     [z_dxHdz, dxHdz_ana] = antisym_func.dxH_dz_cal(z_HI, HI_ana)
 
-    def dxHdz_To_z(dxHdz, M_max, zeta_z_func, T_vir, mu, z_dxHdz, dxHdz_ana):
-        if (dxHdz >= max(dxHdz_ana) or dxHdz <= 0):
-            print('The value should be an positive value smaller than the maximum dxHI/dz of the history')
-            return 0
-        z_turn = z_dxHdz[dxHdz_ana.index(max(dxHdz_ana))]
-        
-        def solution(z_floor, z_top):
-            while (abs(z_floor - z_top) > 0.01):
-                z_mid = (z_floor + z_top) / 2
-                if (dxHdz > antisym_func.dxH_dz(z_mid, M_max, zeta_z_func, T_vir, mu)):
-                    z_floor = z_mid
-                else:
-                    z_top = z_mid
-            return (z_floor + z_top) / 2
-        z1 = solution(6, z_turn)
-        z2 = solution(10, z_turn)
-        return [z1, z2]
-
-    #the redshift of the lowest value of dxHI/dz in Zhou et al. 2021
-    z1 = dxHdz_To_z(0.222, M_max, zeta_z_func, T_vir, mu, z_dxHdz, dxHdz_ana)[0]
+    #the redshift we are interested, mainly in the accelaration stage (dxHdz > 0.25)
+    z1 = z_dxHdz[dxHdz_ana.index(max(dxHdz_ana))] 
     z2 = dxHdz_To_z(0.246, M_max, zeta_z_func, T_vir, mu, z_dxHdz, dxHdz_ana)[1]
-    #the lowest redshift for calculation considering smoothing in 384 Mpc box
-    z_lower_limit = antisym_func.cal_z1_z2(z1, 384, 0)[0] - 0.05 #room for conveniance
-    z_upper_limit = antisym_func.cal_z1_z2(z2, 384, 0)[1] + 0.05
+    #the lowest redshift for xi_A_HICO_unsmoothing calculation considering the smoothing scale
+    z_lower_limit = antisym_func.cal_z1_z2(z1, SMOOTHING_SCALE, 0)[0] - 0.05 #room for conveniance
+    z_upper_limit = antisym_func.cal_z1_z2(z2, SMOOTHING_SCALE, 0)[1] + 0.05
     print('the redshift range for xi_A_HICO computation is (%4.4g, %4.4g)'%(z_lower_limit, z_upper_limit))
     #the minimum mass of bubbles in this redshift range
     M_min = zeta_z_func(z_upper_limit) * antisym_func.TtoM(z_upper_limit, T_vir, mu) * 0.99 #room for conveniance
