@@ -432,12 +432,6 @@ def xH_vol_interp(z, zeta_z_func, T_vir, mu, M_max, BMF_func):
     return xH_volume
 vec_xH_vol_interp = np.vectorize(xH_vol_interp)
 
-#the anverage (1+delta) for the density of the neutral region
-def HIrho_over_rho0(z, zeta_z_func, T_vir, mu, M_max):
-    xH_mass_z = xH_mass(z, zeta_z_func, T_vir, mu, M_max)
-    xH_vol_z = xH_vol(z, zeta_z_func, T_vir, mu, M_max)
-    return xH_mass_z / xH_vol_z
-
 #define functions to calculate the average temprature of 21cm and CO
 def T_21_tilde(z): # in muK
     return 27 * ( ((1+z)/10) * (0.15/OMm/hlittle/hlittle)) ** 0.5 * (OMb * hlittle * hlittle / 0.023) *1e3
@@ -477,6 +471,12 @@ def bar_Q(z, M_max, zeta_z_func, T_vir, mu, PARA):
     
     Q = integrate.quad(integrand, - 6 * s0 ** 0.5, delta_cross, epsrel = 1e-4)[0] + Max_Bubble_fraction(PARA)
     return Q
+
+#the anverage (1+delta) for the density of the neutral region
+def HIrho_over_rho0(z, zeta_z_func, T_vir, mu, M_max):
+    xH_mass_z = 1 - bar_Q(z, M_max, zeta_z_func, T_vir, mu, PARA_z(z, M_max, zeta_z_func, T_vir, mu))
+    xH_vol_z = xH_vol(z, zeta_z_func, T_vir, mu, M_max)
+    return xH_mass_z / xH_vol_z
 
 #calculate the dxH_dz for bar_Q
 def dxH_dz(z, M_max, zeta_z_func, T_vir, mu):
@@ -684,9 +684,9 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func, M_max, T_vir,
     return 0.5 * (xi_HIz1_COz2 - xi_HIz2_COz1) # in muK^2
     
 #smoothing with points evenly located along LoS in a box of 384 Mpc
-def xi_A_HICO_smoothing(z, r12, xi_A_HICO_func):
+def xi_A_HICO_smoothing(z, r12, xi_A_HICO_func, BOX_LEN):
     NUM=20
-    r_array = np.linspace(384 / NUM, 384, NUM)
+    r_array = np.linspace(BOX_LEN / NUM, BOX_LEN, NUM)
     xi_A_HICO = 0
     for r in r_array:
         [z1, z2] = cal_z1_z2(z, r, 0)
