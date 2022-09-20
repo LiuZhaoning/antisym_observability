@@ -13,6 +13,8 @@ import sys
 import mpmath
 import os
 
+#change
+
 speed_C = 2.99792e5 # km/s
 hlittle = (float)(0.678)
 SIGMA8 = 0.82
@@ -550,7 +552,7 @@ def V0_R1R2(R1, R2, r): #R1 >= R2
     
 #antisymmetric cross correlation at redshift z with x1,x2 sperated r12 away
 #assume that the matter distribution freeze at z, only the mass of the bubble increases
-def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func, M_max, T_vir, mu, eta):
+def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu, eta):
     [z1, z2] = cal_z1_z2(z, r12, 0)
     M_min = zeta_z_func(z) * TtoM(z, T_vir, mu)
     PARA = PARA_z(z, M_max, zeta_z_func, T_vir, mu)
@@ -568,7 +570,7 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func, M_max, T_vir,
             R0 = MtoR(m)
             R1 = MtoR(m * (xi_z1 / xi))
             V0 = V0_R1R2(R0, R1, r12)
-            return (BMF_func(m, z) / m) * V0 * delta_z
+            return (BMF_func_z(m) / m) * V0 * delta_z
         def integrand_max(delta):
             delta_z = delta * dicke(z)
             m = M_max / (1 + delta_z)
@@ -591,7 +593,7 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func, M_max, T_vir,
             R0 = MtoR(m)
             R2 = MtoR(m * (xi_z2 / xi))
             V0 = V0_R1R2(R0, R2, r12)
-            return (BMF_func(m, z) / m) * V0 * delta_z
+            return (BMF_func_z(m) / m) * V0 * delta_z
         def integrand_max(delta):
             delta_z = delta * dicke(z)
             m = M_max / (1 + delta_z)
@@ -620,7 +622,7 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func, M_max, T_vir,
             R1 = MtoR(m * (xi_z1 / xi))
             V0 = V0_R1R2(R0, R1, r12)
             r_eff = max(r12, R1)
-            return (BMF_func(m, z) / m) * (V0 * delta_z + \
+            return (BMF_func_z(m) / m) * (V0 * delta_z + \
                                           (4/3 * np.pi * R1**3 - V0) * bar_bx \
                                            * xi_dd_z0_mix(r_eff, fit_para_rpower[0], fit_para_rpower[1], split_k) \
                                           * dicke(z1) ** 2 )
@@ -652,7 +654,7 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func, M_max, T_vir,
             R2 = MtoR(m * (xi_z2 / xi))
             V0 = V0_R1R2(R0, R2, r12)
             r_eff = max(r12, R2)
-            return (BMF_func(m, z) / m) * (V0 * delta_z + \
+            return (BMF_func_z(z) / m) * (V0 * delta_z + \
                                           (4/3 * np.pi * R2**3 - V0) * bar_bx \
                                            * xi_dd_z0_mix(r_eff, fit_para_rpower[0], fit_para_rpower[1], split_k) \
                                           * dicke(z2) ** 2 )

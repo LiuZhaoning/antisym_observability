@@ -11,8 +11,8 @@ import mpmath
 import os
 from multiprocessing import Pool
 import ../antisym_func
-from BMF_calculation_function import BMF_z
-#test
+from ../BMF_calculation_function import BMF_z
+
 if __name__ == '__main__':
     #put in the number of cores for multiprocessing
     zeta = float(sys.argv[1])
@@ -47,16 +47,15 @@ if __name__ == '__main__':
     #the lowest redshift for xi_A_HICO_unsmoothing calculation considering the smoothing scale
     z_lower_limit = antisym_func.cal_z1_z2(z1, SMOOTHING_SCALE, 0)[0] - 0.05 #room for conveniance
     z_upper_limit = antisym_func.cal_z1_z2(z2, SMOOTHING_SCALE, 0)[1] + 0.05
-    print('the redshift range for xi_A_HICO computation is (%4.4g, %4.4g)'%(z_lower_limit, z_upper_limit))
+    print('the redshift range for xi_A_HICO_unsmoothed computation is (%4.4g, %4.4g)'%(z_lower_limit, z_upper_limit))
     #the minimum mass of bubbles in this redshift range
     M_min = zeta_z_func(z_upper_limit) * antisym_func.TtoM(z_upper_limit, T_vir, mu) * 0.99 #room for conveniance
     print('the minimum mass of the bubbles is %4.4g'%(M_min))
-    
-    #calculate the redshift range considering the r12, other than the smoothing
+    #calculate the redshift range considering both of smoothing and r12
     r12_limit = 150
-    z_floor_BMF = antisym_func.cal_z1_z2(z_lower_limit, r12_limit, 0)[0] - 0.02
-    z_top_BMF = antisym_func.cal_z1_z2(z_upper_limit, r12_limit, 0)[1] + 0.02
-    print('the range of redshift of BMF computation is (%3.3g, %3.3g)'%(z_floor_BMF, z_top_BMF))
+    z_floor_HIrho = antisym_func.cal_z1_z2(z_lower_limit, r12_limit, 0)[0] - 0.02
+    z_top_HIrho = antisym_func.cal_z1_z2(z_upper_limit, r12_limit, 0)[1] + 0.02
+    print('the range of redshift of HIrho computation is (%3.3g, %3.3g)'%(z_floor_BMF, z_top_BMF))
     
     #calculate the dn/dm(z,m), the 2D array for interpolation
     #set up the 2D mesh index
