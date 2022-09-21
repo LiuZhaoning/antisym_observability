@@ -13,12 +13,22 @@ from multiprocessing import Pool, Manager
 import antisym_func
 
 def HIrho_multiprocessing(z, zeta_z_func, T_vir, R_mfp, mu, M_max, results):
-  print(z)
-  tick1 = time.time()
   rhoHI_over_rho0 = antisym_func.HIrho_over_rho0(z, zeta_z_func, T_vir, mu, M_max)
-  print(z, rhoHI_over_rho0, time.time() - tick1)
   results.put([z, rhoHI_over_rho0])
-  
+
+def xi_A_HICO_z(z, zeta_z_func, HIrho_over_rho0_func, M_max, T_vir, R_mfp, mu, eta, r12_grid, m_array_BMF, results):
+    print(z, 'start BMF')
+    BMF_array = []
+    PARA = antisym_func.PARA_z(z, M_max, zeta_z_func, T_vir, mu)
+    for m in m_array_BMF:
+        BMF_array.append(antisym_func.BMF(m, PARA))
+    print(z, 'start xi_A_HICO')
+    BMF_func_z = interp1d(m_array_BMF, BMF_array, kind = 'cubic')
+    xi_A_HICO_array = []
+    for r12 in r12_grid:
+        xi_A_HICO_array.append(antisym_func.xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu, eta))
+    results.put([z, BMF_array, xi_A_HICO_array])
+    print(z, 'finish xi_A_HICO')
 
 if __name__ == '__main__':
     #put in parameters of the reionization model
@@ -33,7 +43,11 @@ if __name__ == '__main__':
     mu = 1.22 if T_vir < 9.99999e3 else 0.6
     SMOOTHING_SCALE = 300 #Mpc
     #create an dir to restore the data
-    DIR = '/scratch/liuzhaoning/antisym_observability/zeta%2.2g_Tvir%3.3g_Rmfp%2.2g_SMO%3.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
+    DIR = '/scratch/liuzhaoning/antisym_observability/zeta%5.5g_Tvir%5.5g_Rmfp%5.5g_SMO%3.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
+    #check whether the condition is already computated
+    if os.path.exists(DIR + '/xi_A_HICO_unsmoothed_map.npz'): 
+      print('the condition zeta%5.5g_Tvir%5.5g_Rmfp%5.5g_SMO%3.3g is already computated'(zeta, T_vir, R_mfp, SMOOTHING_SCALE))
+      return 0 
     antisym_func.mkdir(DIR)
 
     #calculate normalized zeta_z points to do interpolation
@@ -68,18 +82,20 @@ if __name__ == '__main__':
     #the lowest redshift for xi_A_HICO_unsmoothing calculation considering the smoothing scale
     z_floor_xi_unsmoothed = antisym_func.cal_z1_z2(z_floor_xi_smoothed, SMOOTHING_SCALE, 0)[0] - 0.05 #room for conveniance
     z_top_xi_unsmoothed = antisym_func.cal_z1_z2(z_top_xi_smoothed, SMOOTHING_SCALE, 0)[1] + 0.05
+    #the minimum mass of bubbles in this redshift range
+    M_min = zeta_z_func(z_top_xi_unsmoothed) * antisym_func.TtoM(z_top_xi_unsmoothed, T_vir, mu) * 0.99 #room for conveniance
     #calculate the redshift range considering both of smoothing and r12
     r12_limit = 150
     z_floor_HIrho = antisym_func.cal_z1_z2(z_floor_xi_unsmoothed, r12_limit, 0)[0] - 0.02
     z_top_HIrho = antisym_func.cal_z1_z2(z_top_xi_unsmoothed, r12_limit, 0)[1] + 0.02
     
     #compute anverage density of the neutral region
-    if not os.path.exists(DIR + '/rhoHI_over_rho0.npz'):
+    if os.path.exists(DIR + '/rhoHI_over_rho0.npz'):
       data = np.load(DIR + '/rhoHI_over_rho0.npz')
-      z_array = data['z']; rhoHI_over_rho0_array = data['rhoHI']
+      z_array = list(data['z']); rhoHI_over_rho0_array = list(data['rhoHI'])
     else:
-      tick_start = time.time()
-      z_array = np.linspace(z_floor_HIrho, z_top_HIrho, 5); rhoHI_over_rho0_array = np.zeros(100)
+      NUM = 100; tick_start = time.time()
+      z_array = list(np.linspace(z_floor_HIrho, z_top_HIrho, NUM)); rhoHI_over_rho0_array = list(np.zeros(NUM))
       MP = Pool(NUM_CORE); results = Manager().Queue()
       print('start')
       for z in z_array:
@@ -87,11 +103,37 @@ if __name__ == '__main__':
       MP.close(); MP.join()
       while not results.empty():
         z, rhoHI = results.get()
-        print(z, rhoHI)
         rhoHI_over_rho0_array[z_array.index(z)] = rhoHI
+      results.close()
       np.savez(DIR + '/rhoHI_over_rho0', z = z_array, rhoHI = rhoHI_over_rho0_array)
-      print('the computation of average density of neutral region cost %3.3g mins'%((time.time() - tick_start) / 60))    
-  
+      print('the computation of average density of neutral region cost %3.3g mins'%((time.time() - tick_start) / 60))
+    HIrho_over_rho0_func = interp1d(z_array, rhoHI_over_rho0_array, kind = 'cubic')
+
+    #use the m_array to calculate the BMF(m, const z) interpolation
+    m_array_BMF = np.logspace(np.log10(M_min), np.log10(0.5 * M_max), 200) #m>6e8
+    m_array_BMF = np.resize(m_grid_BMF,250)
+    m_array_BMF[200:250] = np.linspace(0.5 * M_max, 0.999 * M_max, 51)[1:51]
+    #set up the grid for z and r12
+    z_grid = list(np.linspace(z_floor_xi_unsmoothed, z_top_xi_unsmoothed, 150))
+    r12_grid = np.zeros(100); r12_grid[0:30] = np.linspace(0.1, 5, 30); r12_grid[30:100] = np.linspace(5, r12_limit, 71)[1:71]
+    BMF_map = [] * len(z_grid); xi_A_HICO_map = [] * len(z_grid)
+
+    #computate the xi_A_HICO grid
+    tick_start = time.time()
+    MP = Pool(NUM_CORE); results = Manager().Queue()
+    for z in z_grid:
+        MP.apply_async(xi_A_HICO_z, args=(z, zeta_z_func, HIrho_over_rho0_func, M_max, \
+                                          T_vir, R_mfp, mu, eta, r12_grid, m_array_BMF, results,))
+    MP.close(); MP.join()
+    while not results.empty():
+        z, BMF_array, xi_A_HICO_array = results.get()
+        index = z_grid.index(z)
+        BMF_map[index] = BMF_array; xi_A_HICO_map[index] = xi_A_HICO_array
+    results.close()
+    np.savez(DIR + '/BMF_map', z_grid = z_grid, m_grid = m_array_BMF; BMF_map = BMF_map)
+    np.savez(DIR + '/xi_A_HICO_unsmoothed_map', z_grid = z_grid, r12_grid = r12_grid; xi_A_HICO_map = xi_A_HICO_map)
+    print('xi_A_HICO_unsmoothed calculation cost %4.4g mins'%((time.time() - tick_start) / 60))
+      
 
 
 
