@@ -480,11 +480,6 @@ def HIrho_over_rho0(z, zeta_z_func, T_vir, mu, M_max):
     xH_vol_z = xH_vol(z, zeta_z_func, T_vir, mu, M_max)
     return xH_mass_z / xH_vol_z
 
-#the function used to do multiprocess
-def HIrho_multiprocessing(z, zeta, zeta_z_func, T_vir, R_mfp, mu, M_max, queue):
-    rhoHI_over_rho0 = append(HIrho_over_rho0(z, zeta_z_func, T_vir, mu, M_max))
-    queue.put([z, rhoHI_over_rho0])
-
 #calculate the dxH_dz for bar_Q
 def dxH_dz(z, M_max, zeta_z_func, T_vir, mu):
     xH1 = 1 - bar_Q(z - 0.01, M_max, zeta_z_func, T_vir, mu, PARA_z(z - 0.01, M_max, zeta_z_func, T_vir, mu))
