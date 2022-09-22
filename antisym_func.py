@@ -654,7 +654,7 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
             R2 = MtoR(m * (xi_z2 / xi))
             V0 = V0_R1R2(R0, R2, r12)
             r_eff = max(r12, R2)
-            return (BMF_func_z(z) / m) * (V0 * delta_z + \
+            return (BMF_func_z(m) / m) * (V0 * delta_z + \
                                           (4/3 * np.pi * R2**3 - V0) * bar_bx \
                                            * xi_dd_z0_mix(r_eff, fit_para_rpower[0], fit_para_rpower[1], split_k) \
                                           * dicke(z2) ** 2 )
