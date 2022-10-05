@@ -115,7 +115,7 @@ if __name__ == '__main__':
     #set up the grid for z and r12
     z_grid = list(np.linspace(z_floor_xi_unsmoothed, z_top_xi_unsmoothed, 150))
     r12_grid = np.zeros(100); r12_grid[0:30] = np.linspace(0.1, 5, 30); r12_grid[30:100] = np.linspace(5, r12_limit, 71)[1:71]
-    BMF_map = [] * len(z_grid); xi_A_HICO_map = [] * len(z_grid)
+    BMF_map = [0] * len(z_grid); xi_A_HICO_map = [0] * len(z_grid)
 
     #computate the xi_A_HICO grid
     tick_start = time.time()
