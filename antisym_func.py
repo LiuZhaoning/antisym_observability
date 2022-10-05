@@ -566,9 +566,8 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
     if (xi > eta):
         def integrand(m):
             delta_z = (B0 + B1 * S(m)) * dicke(z)
-            m = m / (1 + delta_z)
-            R0 = MtoR(m)
-            R1 = MtoR(m * (xi_z1 / xi))
+            R0 = MtoR(m / (1 + delta_z))
+            R1 = MtoR(m / (1 + delta_z) * (xi_z1 / xi))
             V0 = V0_R1R2(R0, R1, r12)
             return (BMF_func_z(m) / m) * V0 * delta_z
         def integrand_max(delta):
@@ -589,9 +588,8 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
 
         def integrand(m):
             delta_z = (B0 + B1 * S(m)) * dicke(z)
-            m = m / (1 + delta_z)
-            R0 = MtoR(m)
-            R2 = MtoR(m * (xi_z2 / xi))
+            R0 = MtoR(m / (1 + delta_z))
+            R2 = MtoR(m / (1 + delta_z)* (xi_z2 / xi))
             V0 = V0_R1R2(R0, R2, r12)
             return (BMF_func_z(m) / m) * V0 * delta_z
         def integrand_max(delta):
@@ -617,9 +615,8 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
         bar_bx = bar_bias_x(z1, M_max, zeta_z_func, T_vir, mu)
         def integrand(m):
             delta_z = (B0 + B1 * S(m)) * dicke(z)
-            m = m / (1 + delta_z)
-            R0 = MtoR(m)
-            R1 = MtoR(m * (xi_z1 / xi))
+            R0 = MtoR(m / (1 + delta_z))
+            R1 = MtoR(m / (1 + delta_z) * (xi_z1 / xi))
             V0 = V0_R1R2(R0, R1, r12)
             r_eff = max(r12, R1)
             return (BMF_func_z(m) / m) * (V0 * delta_z + \
@@ -649,9 +646,8 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
         bar_bx = bar_bias_x(z2, M_max, zeta_z_func, T_vir, mu)
         def integrand(m):
             delta_z = (B0 + B1 * S(m)) * dicke(z)
-            m = m / (1 + delta_z)
-            R0 = MtoR(m)
-            R2 = MtoR(m * (xi_z2 / xi))
+            R0 = MtoR(m / (1 + delta_z))
+            R2 = MtoR(m / (1 + delta_z) * (xi_z2 / xi))
             V0 = V0_R1R2(R0, R2, r12)
             r_eff = max(r12, R2)
             return (BMF_func_z(m) / m) * (V0 * delta_z + \

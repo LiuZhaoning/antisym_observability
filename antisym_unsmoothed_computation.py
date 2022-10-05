@@ -20,12 +20,10 @@ def HIrho_multiprocessing(z, zeta_z_func, T_vir, R_mfp, mu, M_max, results):
 
 def xi_A_HICO_z(z, zeta_z_func, HIrho_over_rho0_func, M_max, T_vir, R_mfp, mu, eta, r12_grid, m_array_BMF, results):
     tick1 = time.time()
-    print(z, 'start BMF')
     BMF_array = []
     PARA = antisym_func.PARA_z(z, M_max, zeta_z_func, T_vir, mu)
     for m in m_array_BMF:
         BMF_array.append(antisym_func.BMF(m, PARA))
-    print(z, 'start xi_A_HICO')
     BMF_func_z = interp1d(m_array_BMF, BMF_array, kind = 'cubic')
     xi_A_HICO_array = []
     for r12 in r12_grid:
@@ -85,7 +83,7 @@ if __name__ == '__main__':
     z_floor_xi_unsmoothed = antisym_func.cal_z1_z2(z_floor_xi_smoothed, SMOOTHING_SCALE, 0)[0] - 0.05 #room for conveniance
     z_top_xi_unsmoothed = antisym_func.cal_z1_z2(z_top_xi_smoothed, SMOOTHING_SCALE, 0)[1] + 0.05
     #the minimum mass of bubbles in this redshift range
-    M_min = zeta_z_func(z_floor_xi_unsmoothed) * antisym_func.TtoM(z_floor_xi_unsmoothed, T_vir, mu) * 0.99 #room for conveniance
+    M_min = zeta_z_func(z_top_xi_unsmoothed) * antisym_func.TtoM(z_top_xi_unsmoothed, T_vir, mu) * 0.99 #room for conveniance
     #calculate the redshift range considering both of smoothing and r12
     r12_limit = 150
     z_floor_HIrho = antisym_func.cal_z1_z2(z_floor_xi_unsmoothed, r12_limit, 0)[0] - 0.02
@@ -111,7 +109,7 @@ if __name__ == '__main__':
     HIrho_over_rho0_func = interp1d(z_array, rhoHI_over_rho0_array, kind = 'cubic')
 
     #use the m_array to calculate the BMF(m, const z) interpolation
-    m_array_BMF = np.logspace(np.log10(M_min), np.log10(0.5 * M_max), 200) #m>6e8
+    m_array_BMF = np.logspace(np.log10(M_min), np.log10(0.5 * M_max), 200) 
     m_array_BMF = np.resize(m_array_BMF,250)
     m_array_BMF[200:250] = np.linspace(0.5 * M_max, 0.999 * M_max, 51)[1:51]
     #set up the grid for z and r12
@@ -121,18 +119,6 @@ if __name__ == '__main__':
 
     #computate the xi_A_HICO grid
     tick_start = time.time()
-    
-    z = 8
-    BMF_array = []
-    PARA = antisym_func.PARA_z(z, M_max, zeta_z_func, T_vir, mu)
-    for m in m_array_BMF:
-        BMF_array.append(antisym_func.BMF(m, PARA))
-    print(z, 'start xi_A_HICO')
-    BMF_func_z = interp1d(m_array_BMF, BMF_array, kind = 'cubic')
-    xi_A_HICO_array = []
-    for r12 in r12_grid:
-        xi_A_HICO_array.append(antisym_func.xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu, eta))
-
     MP = Pool(NUM_CORE); xi_queue = Manager().Queue()
     for z in z_grid:
         MP.apply_async(xi_A_HICO_z, args=(z, zeta_z_func, HIrho_over_rho0_func, M_max, \
