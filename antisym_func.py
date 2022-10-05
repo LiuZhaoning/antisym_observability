@@ -1,7 +1,5 @@
 import numpy as np
 import math
-import matplotlib 
-from matplotlib import pyplot as plt
 from scipy import integrate
 from scipy import special
 from scipy.interpolate import interp1d, interp2d
@@ -9,7 +7,6 @@ from scipy.misc import derivative
 from scipy.optimize import curve_fit
 from scipy.optimize import fsolve
 import time
-import sys
 import mpmath
 import os
 
@@ -563,122 +560,36 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
     xi_z2 = bar_Q(z2, M_max, zeta_z_func, T_vir, mu, PARA_z(z2, M_max, zeta_z_func, T_vir, mu))
     delta_cross = B0 + B1 * s0
     
-    if (xi > eta):
-        def integrand(m):
-            delta_z = (B0 + B1 * S(m)) * dicke(z)
-            R0 = MtoR(m / (1 + delta_z))
-            R1 = MtoR(m / (1 + delta_z) * (xi_z1 / xi))
-            V0 = V0_R1R2(R0, R1, r12)
-            return (BMF_func_z(m) / m) * V0 * delta_z
-        def integrand_max(delta):
-            delta_z = delta * dicke(z)
-            m = M_max / (1 + delta_z)
-            R0 = MtoR(m)
-            R1 = MtoR(m * (xi_z1 / xi))
-            V0 = V0_R1R2(R0, R1, r12)
-            return p_delta_s0(delta, s0) * (rho_bar / M_max) * V0 * delta_z
-        R_min = r12 / (1 + (xi_z1 / xi)**(1/3) )
-        M_min = max(RtoM(R_min), M_min)
-        if (M_min < M_max):
-            integration1 = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
-                    + integrate.quad(integrand_max, delta_cross, 6 * s0 ** 0.5, epsrel = 1e-4, limit = 200)[0]
-        else:
-            integration1 = 0
-        #print(integration1)
+    def integrand(m):
+        delta_z = (B0 + B1 * S(m)) * dicke(z)
+        R0 = MtoR(m / (1 + delta_z)); R1 = MtoR(m / (1 + delta_z) * (xi_z1 / xi))
+        V0 = V0_R1R2(R0, R1, r12)
+        return (BMF_func_z(m) / m) * V0 * delta_z
+    def integrand_max(delta):
+        delta_z = delta * dicke(z)
+        R0 = MtoR(m / (1 + delta_z)); R1 = MtoR(m / (1 + delta_z) * (xi_z1 / xi))
+        V0 = V0_R1R2(R0, R1, r12)
+        return p_delta_s0(delta, s0) * (rho_bar / M_max) * V0 * delta_z
+    xi1_delta2 = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
+                + integrate.quad(integrand_max, delta_cross, 6 * s0 ** 0.5, epsrel = 1e-4, limit = 200)[0]
 
-        def integrand(m):
-            delta_z = (B0 + B1 * S(m)) * dicke(z)
-            R0 = MtoR(m / (1 + delta_z))
-            R2 = MtoR(m / (1 + delta_z)* (xi_z2 / xi))
-            V0 = V0_R1R2(R0, R2, r12)
-            return (BMF_func_z(m) / m) * V0 * delta_z
-        def integrand_max(delta):
-            delta_z = delta * dicke(z)
-            m = M_max / (1 + delta_z)
-            R0 = MtoR(m)
-            R2 = MtoR(m * (xi_z2 / xi))
-            V0 = V0_R1R2(R0, R2, r12)
-            return p_delta_s0(delta, s0) * (rho_bar / M_max) * V0 * delta_z
-        R_min = r12 / (1 + (xi_z2 / xi)**(1/3) )
-        M_min = max(RtoM(R_min), M_min)
-        if (M_min < M_max):
-            integration2 = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
-                    + integrate.quad(integrand_max, delta_cross, 6 * s0 ** 0.5, epsrel = 1e-4, limit = 200)[0]
-        else:
-            integration2 = 0
-
-        xi_HIz1_COz2 = - integration1 * T_CO_bar(z2, T_vir, mu) * Bias_CO(z2, T_vir, mu) \
-        * T_21_tilde(z1) * HIrho_over_rho0_func(z1)
-        xi_HIz2_COz1 = - integration2 * T_CO_bar(z1, T_vir, mu) * Bias_CO(z1, T_vir, mu) \
-        * T_21_tilde(z2) * HIrho_over_rho0_func(z2)
-    else:
-        bar_bx = bar_bias_x(z1, M_max, zeta_z_func, T_vir, mu)
-        def integrand(m):
-            delta_z = (B0 + B1 * S(m)) * dicke(z)
-            R0 = MtoR(m / (1 + delta_z))
-            R1 = MtoR(m / (1 + delta_z) * (xi_z1 / xi))
-            V0 = V0_R1R2(R0, R1, r12)
-            r_eff = max(r12, R1)
-            return (BMF_func_z(m) / m) * (V0 * delta_z + \
-                                          (4/3 * np.pi * R1**3 - V0) * bar_bx \
-                                           * xi_dd_z0_mix(r_eff, fit_para_rpower[0], fit_para_rpower[1], split_k) \
-                                          * dicke(z1) ** 2 )
-        def integrand_max(delta):
-            delta_z = delta * dicke(z)
-            m = M_max / (1 + delta_z)
-            R0 = MtoR(m)
-            R1 = MtoR(m * (xi_z1 / xi))
-            V0 = V0_R1R2(R0, R1, r12)
-            r_eff = max(r12, R1)
-            return p_delta_s0(delta, s0) * (rho_bar / M_max) * (V0 * delta_z + \
-                                          (4/3 * np.pi * R1**3 - V0) * bar_bx \
-                                           * xi_dd_z0_mix(r_eff, fit_para_rpower[0], fit_para_rpower[1], split_k) \
-                                          * dicke(z1) ** 2 )
-        R_min = r12 / (1 + (xi_z1 / xi)**(1/3) )
-        M_min = M_min #max(antisym_func.RtoM(R_min), M_min)
-        if (M_min < M_max):
-            integration1 = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
-                    + integrate.quad(integrand_max, delta_cross, 6 * s0 ** 0.5, epsrel = 1e-4, limit = 200)[0]
-        else:
-            integration1 = 0
-        #print(integration1)
-        
-        bar_bx = bar_bias_x(z2, M_max, zeta_z_func, T_vir, mu)
-        def integrand(m):
-            delta_z = (B0 + B1 * S(m)) * dicke(z)
-            R0 = MtoR(m / (1 + delta_z))
-            R2 = MtoR(m / (1 + delta_z) * (xi_z2 / xi))
-            V0 = V0_R1R2(R0, R2, r12)
-            r_eff = max(r12, R2)
-            return (BMF_func_z(m) / m) * (V0 * delta_z + \
-                                          (4/3 * np.pi * R2**3 - V0) * bar_bx \
-                                           * xi_dd_z0_mix(r_eff, fit_para_rpower[0], fit_para_rpower[1], split_k) \
-                                          * dicke(z2) ** 2 )
-        def integrand_max(delta):
-            delta_z = delta * dicke(z)
-            m = M_max / (1 + delta_z)
-            R0 = MtoR(m)
-            R2 = MtoR(m * (xi_z2 / xi))
-            V0 = V0_R1R2(R0, R2, r12)
-            r_eff = max(r12, R2)
-            return p_delta_s0(delta, s0) * (rho_bar / M_max) * (V0 * delta_z + \
-                                          (4/3 * np.pi * R2**3 - V0) * bar_bx \
-                                           * xi_dd_z0_mix(r_eff, fit_para_rpower[0], fit_para_rpower[1], split_k) \
-                                          * dicke(z2) ** 2 )
-        R_min = r12 / (1 + (xi_z2 / xi)**(1/3) )
-        M_min = M_min #max(antisym_func.RtoM(R_min), M_min)
-        if (M_min < M_max):
-            integration2 = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
-                    + integrate.quad(integrand_max, delta_cross, 6 * s0 ** 0.5, epsrel = 1e-4, limit = 200)[0]
-        else:
-            integration2 = 0
+    def integrand(m):
+        delta_z = (B0 + B1 * S(m)) * dicke(z)
+        R0 = MtoR(m / (1 + delta_z)); R2 = MtoR(m / (1 + delta_z) * (xi_z2 / xi))
+        V0 = V0_R1R2(R0, R2, r12)
+        return (BMF_func_z(m) / m) * V0 * delta_z
+    def integrand_max(delta):
+        delta_z = delta * dicke(z)
+        R0 = MtoR(m / (1 + delta_z)); R2 = MtoR(m / (1 + delta_z)* (xi_z2 / xi))
+        V0 = V0_R1R2(R0, R2, r12)
+        return p_delta_s0(delta, s0) * (rho_bar / M_max) * V0 * delta_z
+    xi2_delta1 = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
+                + integrate.quad(integrand_max, delta_cross, 6 * s0 ** 0.5, epsrel = 1e-4, limit = 200)[0]
     
-        xi_HIz1_COz2 = - integration1 * T_CO_bar(z2, T_vir, mu) * Bias_CO(z2, T_vir, mu) \
-        * T_21_tilde(z1) * HIrho_over_rho0_func(z1)
-        xi_HIz2_COz1 = - integration2 * T_CO_bar(z1, T_vir, mu) * Bias_CO(z1, T_vir, mu) \
-        * T_21_tilde(z2) * HIrho_over_rho0_func(z2)
-    #print(integration1, integration2)
-    #print(xi_HIz1_COz2, xi_HIz2_COz1)
+    xi_HIz1_COz2 = - xi1_delta2 * T_CO_bar(z2, T_vir, mu) * Bias_CO(z2, T_vir, mu) \
+                    * T_21_tilde(z1) * HIrho_over_rho0_func(z1)
+    xi_HIz2_COz1 = - xi2_delta1 * T_CO_bar(z1, T_vir, mu) * Bias_CO(z1, T_vir, mu) \
+                    * T_21_tilde(z2) * HIrho_over_rho0_func(z2)
     return 0.5 * (xi_HIz1_COz2 - xi_HIz2_COz1) # in muK^2
     
 #smoothing with points evenly located along LoS in a box of 384 Mpc
