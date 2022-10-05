@@ -1,3 +1,0 @@
-20220920
-把antisym_func中xi_A_HICO函数的BMF_func改成一个红移下对于不同m的一个一元拟合函数
-
