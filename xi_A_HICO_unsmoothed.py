@@ -1,13 +1,7 @@
 import numpy as np
-from scipy import integrate
-from scipy import special
 from scipy.interpolate import interp1d, interp2d
-from scipy.misc import derivative
-from scipy.optimize import curve_fit
-from scipy.optimize import fsolve
 import time
 import sys
-import mpmath
 import os
 from multiprocessing import Pool, Manager
 import antisym_func
@@ -18,6 +12,7 @@ def HIrho_multiprocessing(z, zeta_z_func, T_vir, R_mfp, mu, M_max, results):
   results.put([z, rhoHI_over_rho0])
   print(z, 'finish HIrho cost', (time.time() - tick1) / 60, 'mins')
 
+#function calculating xi_A_HICO for multiprocess
 def xi_A_HICO_z(z, zeta_z_func, HIrho_over_rho0_func, M_max, T_vir, R_mfp, mu, eta, r12_grid, m_array_BMF, results):
     tick1 = time.time()
     BMF_array = []
@@ -40,7 +35,6 @@ if __name__ == '__main__':
     NUM_CORE = int(sys.argv[5])
 
     #parameters used in the computation
-    eta = 0.5 #the limit where we overlook the correlation outside bubbles
     M_max = antisym_func.RtoM(R_mfp)
     mu = 1.22 if T_vir < 9.99999e3 else 0.6
     #create an dir to restore the data
