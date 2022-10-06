@@ -71,15 +71,15 @@ if __name__ == '__main__':
         z_dxHdz_history = list(data['z_dxHdz_history']); dxHdz_history = list(data['dxHdz_history'])
     else:
         z_array_history = np.linspace(5.5, 12, 100); HI_history = []
-        for z in z_HI:
+        for z in z_array_history:
             HI_history.append(1 - antisym_func.bar_Q(z, M_max, zeta_z_func, T_vir, mu, antisym_func.PARA_z(z, M_max, zeta_z_func, T_vir, mu)))
         z_dxHdz_history, dxHdz_history = antisym_func.dxH_dz_cal(z_array_history, HI_history)
         np.savez(DIR + '/history', z_array_history = z_array_history, HI_history = HI_history, \
                     z_dxHdz_history = z_dxHdz_history, dxHdz_history = dxHdz_history)
 
     #the redshift we are interested, mainly in the accelaration stage (dxHdz > 0.24)
-    z_floor_xi_smoothed = antisym_func.dxHdz_To_z(0.222, M_max, zeta_z_func, T_vir, mu, z_dxHdz, dxHdz_ana)[0]
-    z_top_xi_smoothed = antisym_func.dxHdz_To_z(0.222, M_max, zeta_z_func, T_vir, mu, z_dxHdz, dxHdz_ana)[1]
+    z_floor_xi_smoothed = antisym_func.dxHdz_To_z(0.222, M_max, zeta_z_func, T_vir, mu, z_dxHdz_history, dxHdz_history)[0]
+    z_top_xi_smoothed = antisym_func.dxHdz_To_z(0.222, M_max, zeta_z_func, T_vir, mu, z_dxHdz_history, dxHdz_history)[1]
     
     #the lowest redshift for xi_A_HICO_unsmoothing calculation considering the smoothing scale
     z_floor_xi_unsmoothed = antisym_func.cal_z1_z2(z_floor_xi_smoothed, SMOOTHING_SCALE, 0)[0] - 0.05 #room for conveniance
@@ -112,7 +112,7 @@ if __name__ == '__main__':
     for i in range(len(z_array_HIrho)):
         if (rhoHI_over_rho0_array[len(z_array_HIrho) - 1 - i] < rhoHI_over_rho0_array[len(z_array_HIrho) - 2 - i]):
             for j in range(len(z_array_HIrho) - 1 - i):
-                rhoHI_over_rho0_array[j] = HIrho[len(z_array_HIrho) - 1 - i]
+                rhoHI_over_rho0_array[j] = rhoHI_over_rho0_array[len(z_array_HIrho) - 1 - i]
     HIrho_over_rho0_interp = interp1d(z_array_HIrho, rhoHI_over_rho0_array, kind = 'cubic')
 
     #use the m_array to calculate the BMF(m, const z) interpolation
@@ -128,7 +128,7 @@ if __name__ == '__main__':
     tick_start = time.time()
     MP = Pool(NUM_CORE); xi_queue = Manager().Queue()
     for z in z_grid:
-        MP.apply_async(xi_A_HICO_z, args=(z, zeta_z_func, HIrho_over_rho0_func, M_max, \
+        MP.apply_async(xi_A_HICO_z, args=(z, zeta_z_func, HIrho_over_rho0_interp, M_max, \
                                           T_vir, R_mfp, mu, eta, r12_grid, m_array_BMF, xi_queue,))
     MP.close(); MP.join()
     while not xi_queue.empty():

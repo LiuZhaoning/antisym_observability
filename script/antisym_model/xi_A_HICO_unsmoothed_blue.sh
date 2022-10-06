@@ -8,6 +8,7 @@
 zeta=37.5
 Tvir=41000
 Rmfp=50
+SMOOTHING=384
 NUMCORE=20
 
-python3 /home/liuzhaoning/antisym_observability/antisym_unsmoothed_computation.py $zeta $Tvir $Rmfp $NUMCORE
+python3 /home/liuzhaoning/antisym_observability/xi_A_HICO_unsmoothed.py $zeta $Tvir $Rmfp $SMOOTHING  $NUMCORE
