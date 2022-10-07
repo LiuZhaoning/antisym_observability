@@ -13,8 +13,8 @@ def HIrho_multiprocessing(z, zeta_z_func, T_vir, R_mfp, mu, M_max, results):
   print(z, 'finish HIrho cost', (time.time() - tick1) / 60, 'mins')
 
 #function calculating xi_A_HICO for multiprocess
-def xi_A_HICO_z(z, zeta_z_func, HIrho_over_rho0_func, M_max, T_vir, R_mfp, mu, eta, r12_grid, m_array_BMF, results):
-    tick1 = time.time()
+def xi_A_HICO_z(z, zeta_z_func, HIrho_over_rho0_func, M_max, T_vir, mu, r12_grid, m_array_BMF, results):
+    tick_start = time.time()
     BMF_array = []
     PARA = antisym_func.PARA_z(z, M_max, zeta_z_func, T_vir, mu)
     for m in m_array_BMF:
@@ -22,9 +22,9 @@ def xi_A_HICO_z(z, zeta_z_func, HIrho_over_rho0_func, M_max, T_vir, R_mfp, mu, e
     BMF_func_z = interp1d(m_array_BMF, BMF_array, kind = 'cubic')
     xi_A_HICO_array = []
     for r12 in r12_grid:
-        xi_A_HICO_array.append(antisym_func.xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu, eta))
+        xi_A_HICO_array.append(antisym_func.xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu))
     results.put([z, BMF_array, xi_A_HICO_array])
-    print(z, 'finish xi_A_HICO cost', (time.time() - tick1) / 60, 'mins')
+    print(z, 'finish xi_A_HICO cost', (time.time() - tick_start) / 60, 'mins')
 
 if __name__ == '__main__':
     #put in parameters of the reionization model
@@ -41,7 +41,8 @@ if __name__ == '__main__':
     DIR = '/scratch/liuzhaoning/antisym_observability/xi_A_HICO/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
     #check whether the condition is already computated
     if os.path.exists(DIR + '/xi_A_HICO_unsmoothed_map.npz'): 
-      print('the condition zeta%5.5g_Tvir%5.5g_Rmfp%5.5g_SMO%3.3g is already computated'(zeta, T_vir, R_mfp, SMOOTHING_SCALE)) 
+      print('the condition zeta%5.5g_Tvir%5.5g_Rmfp%5.5g_SMO%3.3g is already computated'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE))
+      #sys.exit()
     antisym_func.mkdir(DIR)
 
     #calculate normalized zeta_z points to do interpolation
@@ -117,13 +118,13 @@ if __name__ == '__main__':
     z_grid = list(np.linspace(z_floor_xi_unsmoothed, z_top_xi_unsmoothed, 200))
     r12_grid = np.zeros(100); r12_grid[0:30] = np.linspace(0.1, 5, 30); r12_grid[30:100] = np.linspace(5, r12_limit, 71)[1:71]
     BMF_map = [0] * len(z_grid); xi_A_HICO_map = [0] * len(z_grid)
-
+    
     #computate the xi_A_HICO grid
     tick_start = time.time()
     MP = Pool(NUM_CORE); xi_queue = Manager().Queue()
     for z in z_grid:
         MP.apply_async(xi_A_HICO_z, args=(z, zeta_z_func, HIrho_over_rho0_interp, M_max, \
-                                          T_vir, R_mfp, mu, eta, r12_grid, m_array_BMF, xi_queue,))
+                                          T_vir, mu, r12_grid, m_array_BMF, xi_queue,))
     MP.close(); MP.join()
     while not xi_queue.empty():
         z, BMF_array, xi_A_HICO_array = xi_queue.get()

@@ -549,7 +549,7 @@ def V0_R1R2(R1, R2, r): #R1 >= R2
     
 #antisymmetric cross correlation at redshift z with x1,x2 sperated r12 away
 #assume that the matter distribution freeze at z, only the mass of the bubble increases
-def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu, eta):
+def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu):
     [z1, z2] = cal_z1_z2(z, r12, 0)
     M_min = zeta_z_func(z) * TtoM(z, T_vir, mu)
     PARA = PARA_z(z, M_max, zeta_z_func, T_vir, mu)
@@ -567,7 +567,7 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
         return (BMF_func_z(m) / m) * V0 * delta_z
     def integrand_max(delta):
         delta_z = delta * dicke(z)
-        R0 = MtoR(m / (1 + delta_z)); R1 = MtoR(m / (1 + delta_z) * (xi_z1 / xi))
+        R0 = MtoR(M_max / (1 + delta_z)); R1 = MtoR(M_max / (1 + delta_z) * (xi_z1 / xi))
         V0 = V0_R1R2(R0, R1, r12)
         return p_delta_s0(delta, s0) * (rho_bar / M_max) * V0 * delta_z
     xi1_delta2 = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
@@ -580,7 +580,7 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
         return (BMF_func_z(m) / m) * V0 * delta_z
     def integrand_max(delta):
         delta_z = delta * dicke(z)
-        R0 = MtoR(m / (1 + delta_z)); R2 = MtoR(m / (1 + delta_z)* (xi_z2 / xi))
+        R0 = MtoR(M_max / (1 + delta_z)); R2 = MtoR(M_max / (1 + delta_z)* (xi_z2 / xi))
         V0 = V0_R1R2(R0, R2, r12)
         return p_delta_s0(delta, s0) * (rho_bar / M_max) * V0 * delta_z
     xi2_delta1 = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
