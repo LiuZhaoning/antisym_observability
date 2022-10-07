@@ -11,4 +11,4 @@ Rmfp=50
 SMOOTHING=384
 NUMCORE=5
 
-python3 /home/liuzhaoning/antisym_observability/Pk_A_HICO.py $zeta $Tvir $Rmfp $SMOOTHING $NUMCORE
+python3 /home/liuzhaoning/antisym_observability/Pk_A_model_examination.py $zeta $Tvir $Rmfp $SMOOTHING $NUMCORE
