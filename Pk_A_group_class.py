@@ -40,7 +40,7 @@ if __name__ == '__main__':
         z_zeta_interp_array = data['z']; zeta_z_interp_array = data['zeta_z']
         zeta_z_func = interp1d(z_zeta_interp_array, zeta_z_interp_array, kind = 'cubic')
     else:
-        print('file %s not found'%(DIR + '/nornalized_zeta.npz'))
+        print('file %s not found'%(DIR_read + '/nornalized_zeta.npz'))
         sys.exit()
     #load in the history
     if os.path.exists(DIR_read + '/history.npz'):
