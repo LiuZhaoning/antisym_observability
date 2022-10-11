@@ -547,7 +547,7 @@ def V0_R1R2(R1, R2, r): #R1 >= R2
     elif R1 > r + R2:
         return 4/3 * np.pi * R2**3
     
-#antisymmetric cross correlation at redshift z with x1,x2 sperated r12 away
+#antisymmetric cross correlation at redshift z with x1,x2 sperated r12 away along LoS
 #assume that the matter distribution freeze at z, only the mass of the bubble increases
 def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu):
     [z1, z2] = cal_z1_z2(z, r12, 0)
@@ -591,6 +591,60 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
     xi_HIz2_COz1 = - xi2_delta1 * T_CO_bar(z1, T_vir, mu) * Bias_CO(z1, T_vir, mu) \
                     * T_21_tilde(z2) * HIrho_over_rho0_func(z2)
     return 0.5 * (xi_HIz1_COz2 - xi_HIz2_COz1) # in muK^2
+    
+#compute the symmetric cross-correlation between 21cm and CO(1-0) line
+def xi_S_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu):
+    M_min = zeta_z_func(z) * TtoM(z, T_vir, mu)
+    PARA = PARA_z(z, M_max, zeta_z_func, T_vir, mu)
+    [s0, B0, B1] = PARA
+    delta_cross = B0 + B1 * s0
+    
+    def integrand(m):
+        delta_z = (B0 + B1 * S(m)) * dicke(z)
+        R = MtoR(m / (1 + delta_z)); V0 = V0_R1R2(R, R, r12)
+        return (BMF_func_z(m) / m) * V0 * delta_z
+    def integrand_max(delta):
+        delta_z = delta * dicke(z)
+        R = MtoR(M_max / (1 + delta_z)); V0 = V0_R1R2(R, R, r12)
+        return p_delta_s0(delta, s0) * (rho_bar / M_max) * V0 * delta_z
+    xi_HII_delta = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
+                + integrate.quad(integrand_max, delta_cross, 6 * s0 ** 0.5, epsrel = 1e-4, limit = 200)[0]
+    
+    xi_HI_CO = - xi_HII_delta * T_CO_bar(z, T_vir, mu) * Bias_CO(z, T_vir, mu) * T_21_tilde(z) * HIrho_over_rho0_func(z)
+    return xi_HI_CO # in muK^2
+
+#compute the auto cross-correlation of 21cm
+def xi_auto_21(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu):
+    M_min = zeta_z_func(z) * TtoM(z, T_vir, mu)
+    PARA = PARA_z(z, M_max, zeta_z_func, T_vir, mu)
+    [s0, B0, B1] = PARA
+    delta_cross = B0 + B1 * s0
+    Q = bar_Q(z, M_max, zeta_z_func, T_vir, mu, PARA)
+    
+    def integrand(m):
+        delta_z = (B0 + B1 * S(m)) * dicke(z)
+        R = MtoR(m / (1 + delta_z)); V0 = V0_R1R2(R, R, r12)
+        return (BMF_func_z(m) / m) * V0
+    def integrand_max(delta):
+        delta_z = delta * dicke(z)
+        R = MtoR(M_max / (1 + delta_z)); V0 = V0_R1R2(R, R, r12)
+        return p_delta_s0(delta, s0) * (rho_bar / M_max) * V0
+    P1 = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
+                + integrate.quad(integrand_max, delta_cross, 6 * s0 ** 0.5, epsrel = 1e-4, limit = 200)[0]
+    xi_auto_HII = (1 - Q) * P1 + Q * Q
+    xi_auto_21 = xi_auto_HII * (T_21_tilde(z) ** 2) * (HIrho_over_rho0_func(z) ** 2)
+    return xi_auto_21 # in muK^2
+    
+#compute the symmetric power spectrum from the cross-correlation function
+def Pk_S(k, xi_S_HICO_func, lower_limit, upper_limit):
+    integrand = lambda r: xi_S_HICO_func(r) * (r * r) * np.sin(k * r) / (k * r)
+    Pk = (hlittle ** 3) * 4 * np.pi * integrate.quad(integrand, lower_limit, upper_limit, epsrel = 1e-3)[0]
+    return Pk #in muK^2 h^-3 Mpc^3
+
+#compute the auto power spectrum of CO line
+def Pk_auto_CO(z, k, T_vir, mu):
+    return (hlittle ** 3) * power_in_k(k) * (dicke(z) ** 2) \
+            * (Bias_CO(z, T_vir, mu) ** 2) * (T_CO_bar(z, T_vir, mu) ** 2) #in muK^2 h^-3 Mpc^3
     
 #smoothing with points evenly located along LoS in a box of 384 Mpc
 def xi_A_HICO_smoothing(z, r12, xi_A_HICO_func, BOX_LEN):
