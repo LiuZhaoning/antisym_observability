@@ -28,8 +28,9 @@ if __name__ == '__main__':
     mu = 1.22 if T_vir < 9.99999e3 else 0.6
     
     #create an dir to restore the data
+    antisym_func.mkdir('/scratch/liuzhaoning/antisym_observability/Pk_A_group_class')
     DIR_read = '/scratch/liuzhaoning/antisym_observability/xi_A_HICO/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
-    DIR_load = '/scratch/liuzhaoning/antisym_observability/Pk_A/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
+    DIR_load = '/scratch/liuzhaoning/antisym_observability/Pk_A_group_class/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
     antisym_func.mkdir(DIR_load)
     
     #load in the normalized zeta
@@ -106,14 +107,9 @@ if __name__ == '__main__':
     while not Pk_A_queue.empty():
         z, Pk_A_array = Pk_A_queue.get()
         Pk_A_dec_map[z_xi_dec_smoothed_array.index(z)] = Pk_A_array
-    np.savez(DIR_load + '/Pk_A_acc_array', z_xi_acc_smoothed_array = z_xi_acc_smoothed_array, \
+    np.savez(DIR_load + '/Pk_A_acc_array', kh_array = kh_array, z_xi_acc_smoothed_array = z_xi_acc_smoothed_array, \
                 dxHdz_xi_acc_smoothed_array = dxHdz_xi_acc_smoothed_array, Pk_A_acc_map = Pk_A_acc_map)
     np.savez(DIR_load + '/Pk_A_dec_array', z_xi_dec_smoothed_array = z_xi_dec_smoothed_array, \
                 dxHdz_xi_dec_smoothed_array = dxHdz_xi_dec_smoothed_array, Pk_A_dec_map = Pk_A_dec_map)
                 
     print('Pk_A_HICO calculation cost %4.4g mins'%((time.time() - tick_start) / 60))
-    
-    
-    
-    
-    
