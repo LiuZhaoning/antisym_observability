@@ -23,14 +23,15 @@ if __name__ == '__main__':
     T_vir = float(sys.argv[2])
     R_mfp = float(sys.argv[3])
     SMOOTHING_SCALE = float(sys.argv[4]) #Mpc
-    NUM_CORE = int(sys.argv[5])
+    SMOOTHING_Pk = float(sys.argv[5])
+    NUM_CORE = int(sys.argv[6])
     M_max = antisym_func.RtoM(R_mfp)
     mu = 1.22 if T_vir < 9.99999e3 else 0.6
     
     #create an dir to restore the data
     antisym_func.mkdir('/scratch/liuzhaoning/antisym_observability/Pk_A_group_class')
     DIR_read = '/scratch/liuzhaoning/antisym_observability/xi_A_HICO/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
-    DIR_load = '/scratch/liuzhaoning/antisym_observability/Pk_A_group_class/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
+    DIR_load = '/scratch/liuzhaoning/antisym_observability/Pk_A_group_class/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_Pk)
     antisym_func.mkdir(DIR_load)
     
     #load in the normalized zeta
@@ -77,12 +78,12 @@ if __name__ == '__main__':
     for z in z_xi_acc_smoothed_array:
         xi_acc_smoothed_array = []
         for r12 in r12_smoothed_grid:
-            xi_acc_smoothed_array.append(antisym_func.xi_A_HICO_smoothing(z, r12, xi_A_HICO_unsmoothed_interp, SMOOTHING_SCALE)[0])
+            xi_acc_smoothed_array.append(antisym_func.xi_A_HICO_smoothing(z, r12, xi_A_HICO_unsmoothed_interp, SMOOTHING_Pk)[0])
         xi_acc_smoothed_func_array.append(interp1d(r12_smoothed_grid, xi_acc_smoothed_array, kind = 'cubic'))
     for z in z_xi_dec_smoothed_array:
         xi_dec_smoothed_array = []
         for r12 in r12_smoothed_grid:
-            xi_dec_smoothed_array.append(antisym_func.xi_A_HICO_smoothing(z, r12, xi_A_HICO_unsmoothed_interp, SMOOTHING_SCALE)[0])
+            xi_dec_smoothed_array.append(antisym_func.xi_A_HICO_smoothing(z, r12, xi_A_HICO_unsmoothed_interp, SMOOTHING_Pk)[0])
         xi_dec_smoothed_func_array.append(interp1d(r12_smoothed_grid, xi_dec_smoothed_array, kind = 'cubic'))
   
     #Fourier transformation to compute the smoothed antisymmetric power spectrum
