@@ -61,7 +61,7 @@ if __name__ == '__main__':
         sys.exit()
     
     #set the redshift of antisymmetric power spectrum we are computating
-    dxHdz_temp_array = np.linspace(0.225, 0.44, 25)
+    dxHdz_temp_array = np.linspace(0.225, 0.445, 23)
     z_xi_acc_smoothed_array = []; z_xi_dec_smoothed_array = [];
     dxHdz_xi_acc_smoothed_array = []; dxHdz_xi_dec_smoothed_array = []
     for dxHdz in dxHdz_temp_array:
