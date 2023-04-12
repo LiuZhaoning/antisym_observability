@@ -33,12 +33,14 @@ if __name__ == '__main__':
     R_mfp = float(sys.argv[3])
     SMOOTHING_SCALE = float(sys.argv[4]) #Mpc
     NUM_CORE = int(sys.argv[5])
-
+    
     #parameters used in the computation
     M_max = antisym_func.RtoM(R_mfp)
     mu = 1.22 if T_vir < 9.99999e3 else 0.6
     #create an dir to restore the data
-    DIR = '/scratch/liuzhaoning/antisym_observability/xi_A_HICO/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
+    antisym_func.mkdir('/scratch/liuzhaoning/antisym_observability/20230412')
+    antisym_func.mkdir('/scratch/liuzhaoning/antisym_observability/20230412/xi_A_HICO')
+    DIR = '/scratch/liuzhaoning/antisym_observability/20230412/xi_A_HICO/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
     #check whether the condition is already computated
     if os.path.exists(DIR + '/xi_A_HICO_unsmoothed_map.npz'): 
       print('the condition zeta%5.5g_Tvir%5.5g_Rmfp%5.5g_SMO%3.3g is already computated'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE))
@@ -51,7 +53,7 @@ if __name__ == '__main__':
       z_zeta_interp_array = data['z']; zeta_z_interp_array = data['zeta_z']
     else:
       tick_start = time.time()
-      NUM = 100; z_zeta_interp_array = np.linspace(5.5, 12, NUM); zeta_z_interp_array = []
+      NUM = 100; z_zeta_interp_array = np.linspace(5, 12, NUM); zeta_z_interp_array = []
       for i in range(NUM):
         zeta_z_interp_array.append(antisym_func.zeta_z(z_zeta_interp_array[i], zeta, T_vir, mu))
       np.savez(DIR + '/normalized_zeta', z = z_zeta_interp_array, zeta_z = zeta_z_interp_array)
@@ -65,7 +67,7 @@ if __name__ == '__main__':
         z_array_history = list(data['z_array_history']); HI_history = list(data['HI_history'])
         z_dxHdz_history = list(data['z_dxHdz_history']); dxHdz_history = list(data['dxHdz_history'])
     else:
-        z_array_history = np.linspace(5.5, 12, 100); HI_history = []
+        z_array_history = np.linspace(5, 12, 100); HI_history = []
         for z in z_array_history:
             HI_history.append(1 - antisym_func.bar_Q(z, M_max, zeta_z_func, T_vir, mu, antisym_func.PARA_z(z, M_max, zeta_z_func, T_vir, mu)))
         z_dxHdz_history, dxHdz_history = antisym_func.dxH_dz_cal(z_array_history, HI_history)
@@ -73,8 +75,8 @@ if __name__ == '__main__':
                     z_dxHdz_history = z_dxHdz_history, dxHdz_history = dxHdz_history)
 
     #the redshift we are interested, mainly in the accelaration stage (dxHdz > 0.24)
-    z_floor_xi_smoothed = antisym_func.dxHdz_To_z(0.222, M_max, zeta_z_func, T_vir, mu, z_dxHdz_history, dxHdz_history)[0]
-    z_top_xi_smoothed = antisym_func.dxHdz_To_z(0.222, M_max, zeta_z_func, T_vir, mu, z_dxHdz_history, dxHdz_history)[1]
+    z_floor_xi_smoothed = antisym_func.dxHdz_To_z(0.245, M_max, zeta_z_func, T_vir, mu, z_dxHdz_history, dxHdz_history)[0]
+    z_top_xi_smoothed = antisym_func.dxHdz_To_z(0.245, M_max, zeta_z_func, T_vir, mu, z_dxHdz_history, dxHdz_history)[1]
     
     #the lowest redshift for xi_A_HICO_unsmoothing calculation considering the smoothing scale
     z_floor_xi_unsmoothed = antisym_func.cal_z1_z2(z_floor_xi_smoothed, SMOOTHING_SCALE, 0)[0] - 0.05 #room for conveniance
@@ -85,7 +87,9 @@ if __name__ == '__main__':
     r12_limit = 150
     z_floor_HIrho = antisym_func.cal_z1_z2(z_floor_xi_unsmoothed, r12_limit, 0)[0] - 0.02
     z_top_HIrho = antisym_func.cal_z1_z2(z_top_xi_unsmoothed, r12_limit, 0)[1] + 0.02
-    
+    if z_floor_HIrho < 5 or z_top_HIrho > 13:
+      print('ERROR: z_floor_HIrho = %3.3g, z_top_HIrho = %3.3g, out of zeta_interpolation range'%(z_floor_HIrho, z_top_HIrho))
+
     #compute anverage density of the neutral region
     if os.path.exists(DIR + '/rhoHI_over_rho0.npz'):
         data = np.load(DIR + '/rhoHI_over_rho0.npz')

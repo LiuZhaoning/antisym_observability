@@ -363,7 +363,7 @@ def PARA_z(z, M_max, zeta_z_func, T_vir, mu):
     B1 = B_1(z, zeta_z_func, T_vir, mu)
     return [s0, B0, B1]
 
-#calculate the bubble mass function (dn/dm * n)
+#calculate the bubble mass function (dn/dm * m)
 #for M_bubble < M_max
 def BMF(m, PARA): #the redshift information is in PARA
     [s0, B0, B1] = PARA
@@ -631,7 +631,7 @@ def xi_auto_21(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_v
         return p_delta_s0(delta, s0) * (rho_bar / M_max) * V0
     P1 = integrate.quad(integrand, M_min, 0.999 * M_max, epsrel = 1e-4)[0] \
                 + integrate.quad(integrand_max, delta_cross, 6 * s0 ** 0.5, epsrel = 1e-4, limit = 200)[0]
-    xi_auto_HII = (1 - Q) * P1 + Q * Q
+    xi_auto_HII = (1 - Q) * P1
     xi_auto_21 = xi_auto_HII * (T_21_tilde(z) ** 2) * (HIrho_over_rho0_func(z) ** 2)
     return xi_auto_21 # in muK^2
     
@@ -691,5 +691,5 @@ def fit_nR(kh_array, Pk_A_array, MEASURE):
             func_form = A_R * k_local ** (-n_R)
             return np.log10(func_form)
         popt, pocv = curve_fit(LS_PowerLaw_factor, kh_array, np.log10(Pk_A_fit), p0 = [np.log10(Pk_A_fit[-1]),2])
-    return [popt[0], popt[1], pocv[1,1] ** 0.5] #[A_R, n_R, errorbar for n_R]
+    return [popt[0], popt[1], pocv[0,0] ** 0.5, pocv[1,1] ** 0.5] #[A_R, n_R, errorbar for A_R, errorbar for n_R]
 
