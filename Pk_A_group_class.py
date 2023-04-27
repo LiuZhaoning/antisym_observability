@@ -24,14 +24,16 @@ if __name__ == '__main__':
     R_mfp = float(sys.argv[3])
     SMOOTHING_SCALE = float(sys.argv[4]) #Mpc
     SMOOTHING_Pk = float(sys.argv[5])
-    NUM_CORE = int(sys.argv[6])
+    FILE_NAME = str(sys.argv[6])
+    NUM_CORE = int(sys.argv[7])
+    
     M_max = antisym_func.RtoM(R_mfp)
     mu = 1.22 if T_vir < 9.99999e3 else 0.6
     
     #create an dir to restore the data
-    antisym_func.mkdir('/scratch/liuzhaoning/antisym_observability/20230412/Pk_A_group_class')
-    DIR_read = '/scratch/liuzhaoning/antisym_observability/20230412/xi_A_HICO/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
-    DIR_load = '/scratch/liuzhaoning/antisym_observability/20230412/Pk_A_group_class/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g_LKS'%(zeta, T_vir, R_mfp, SMOOTHING_Pk)
+    DIR = '/scratch/liuzhaoning/antisym_observability/' + FILE_NAME + '/zeta%05.5g_Tvir%05.5g_Rmfp%05.5g_SMO%03.3g'%(zeta, T_vir, R_mfp, SMOOTHING_SCALE)
+    DIR_read = DIR + '/xi_A_HICO'
+    DIR_load = DIR + '/Pk_A_group_class_SMO%03.3g'%SMOOTHING_Pk
     antisym_func.mkdir(DIR_load)
     
     #load in the normalized zeta
