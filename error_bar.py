@@ -98,6 +98,7 @@ def W(k, mu_0, z, nu_rest, Omega_beam, delta_nu):
     delta_nu : MHz, the width of single frequency channel
     """
     sigma_perp = X(z)*np.sqrt(Omega_beam) / (2 * np.pi)
+    print('sigma_perp =', sigma_perp)
     sigma_para = Y(z, nu_rest)*delta_nu / (2 * np.pi)
     modification = np.exp(k**2*sigma_perp**2) * integrate.quad(lambda mu: np.exp(k**2*(sigma_para**2-sigma_perp**2)*mu**2), mu_0, 1)[0]
     modification /= (1 - mu_0)
@@ -143,14 +144,16 @@ def error_CO_auto(k, delta_k, k_limits, P_k, z, Tsys, Omega_patch, delta_D, NUM_
         noise = W(k, 0, z, nu_CO, Omega_beam, delta_nu)*X(z)**2*Y(z, nu_CO)*Tsys**2*Omega_survey/Nfeeds/t_int/np.sqrt(Nmodes)
         cosmic_variance = P_k/np.sqrt(Nmodes)
         total = noise+cosmic_variance
-        return total, noise, cosmic_variance, Nmodes
+        print('1/W = %4.4g'%W(k, 0, z, nu_CO, Omega_beam, delta_nu))
+        print('PN = %4.4g'%(X(z)**2*Y(z, nu_CO)*Tsys**2*Omega_survey/Nfeeds/t_int))
     else:
         mu_0 = (1 - k_per_max**2 / k**2) ** 0.5
         Nmodes = V_survey / (2*np.pi)**3 * 2 * np.pi * k**2 * delta_k * (1 - mu_0)
         noise = W(k, mu_0, z, nu_CO, Omega_beam, delta_nu)*X(z)**2*Y(z, nu_CO)*Tsys**2*Omega_survey/Nfeeds/t_int/np.sqrt(Nmodes)
         cosmic_variance = P_k/np.sqrt(Nmodes)
         total = noise+cosmic_variance
-        return total, noise, cosmic_variance, Nmodes
+        print(W(k, mu_0, z, nu_CO, Omega_beam, delta_nu))
+    return total, noise, cosmic_variance, Nmodes
         
 def n_u(u, wavelength):
     """
@@ -300,4 +303,8 @@ def VAR_PA_k(k, delta_k, z, Omega_patch, NUM_PATCH, Tsys_CO, Tsys_21, Omega_beam
     sigma_PA_k, _ = error_21_CO_cross(k, delta_k, k_limits, PA_k, z, Omega_patch, NUM_PATCH, delta_D) #cosmic variance only
     VAR_PA_k = (9 / 20 / np.pi) * sigma_PA_k**2 + sigma_P_k_21 * sigma_P_k_CO - sigma_PS_k**2
     VAR_PA_k_cv = (9 / 20 / np.pi) * sigma_PA_k**2 + sigma_P_k_21_cv * sigma_P_k_CO_cv - sigma_PS_k**2 #eqn 9 in Tan's draft
+    print('sigma_P_k_CO = %5.5g'%sigma_P_k_CO,'sigma_P_k_CO_cv = %5.5g'%sigma_P_k_CO_cv)
+    print('sigma_P_k_21 = %5.5g'%sigma_P_k_21,'sigma_P_k_21_cv = %5.5g'%sigma_P_k_21_cv)
+    print('sigma_PS_k = %5.5g'%sigma_PS_k,'sigma_PA_k = %5.5g'%sigma_PS_k)
+    print('sigma_error = %5.5g'%VAR_PA_k**0.5,'sigma_cv = %5.5g'%VAR_PA_k_cv**0.5)
     return VAR_PA_k**0.5, VAR_PA_k_cv**0.5 #return the sigma of error
