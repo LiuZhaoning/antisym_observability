@@ -310,7 +310,6 @@ def W_CO(z, k, k_limits, D_dish, delta_nu_CO):
     
     theta_FWHM = 1.22 * (lambda_CO * (1+z) / D_dish)
     sigma_perp = X(z) * theta_FWHM / (8 * np.log(2))**0.5
-    print('sigma_perp =', sigma_perp)
     sigma_para = Y(z, nu_CO) * delta_nu_CO #/ 2 / np.pi
     if mu2 <= mu3:
         print('ALLERT : usually this case not happening')
@@ -355,8 +354,6 @@ def error_CO_auto(z, k, delta_k, k_limits, P_k, BOX_LEN, NUM_PATCH, D_dish, delt
     
     P_N = X(z)**2 * Y(z, nu_CO) * T_sys_CO**2 * Omega_survey / (N_feeds * t_total)
     W_k = W_CO(z, k, k_limits, D_dish, delta_nu_CO)
-    print('1/W = %4.4g'%(1/W_k))
-    print('PN = %4.4g'%P_N)
     
     N_modes = sphere_k_modes(k, delta_k, k_limits, BOX_LEN, NUM_PATCH)
     sigma_cosmic_variance = P_k / (N_modes)**0.5
@@ -407,7 +404,7 @@ def error_21_auto(z, k, delta_k, k_limits, P_k, BOX_LEN, NUM_PATCH, d_station, N
     k_per_min, k_per_max, k_para_min, k_para_max = k_limits
     mu1 = max(k**2 - k_per_max**2, 0)**0.5 / k;  mu2 = max(k**2 - k_per_min**2, 0)**0.5 / k
     mu3 = min(k_para_min / k, 1);                mu4 = min(k_para_max / k, 1)
-    
+        
     t_total *= 3600 * 1e6 #transform the unit of hour to '1e-6 second'
     V_survey = BOX_LEN**3 * NUM_PATCH
     Omega_survey = NUM_PATCH * sky_area_patch(z, BOX_LEN)
@@ -548,8 +545,8 @@ def maximum_significance_level(kh_array, P_k, sigma_P_k):
     significance : the maximum significance level
     kh_max : h/Mpc, the largest k within which the significance reaches the maximum
     '''
-    free_degree = len(k_array) - 1
-    S_over_N = [abs(Pk[i]) / sigma_P_k[i] for i in range(free_degree + 1)]
+    free_degree = len(kh_array) - 1
+    S_over_N = [abs(P_k[i]) / sigma_P_k[i] for i in range(free_degree + 1)]
     square_sum = np.sum(np.array(S_over_N)**2)
     confidence = significance_level(square_sum, free_degree)
     kh_min = kh_array[0]

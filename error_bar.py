@@ -98,7 +98,7 @@ def W(k, mu_0, z, nu_rest, Omega_beam, delta_nu):
     delta_nu : MHz, the width of single frequency channel
     """
     sigma_perp = X(z)*np.sqrt(Omega_beam) / (2 * np.pi)
-    print('sigma_perp =', sigma_perp)
+    #print('sigma_perp =', sigma_perp)
     sigma_para = Y(z, nu_rest)*delta_nu / (2 * np.pi)
     modification = np.exp(k**2*sigma_perp**2) * integrate.quad(lambda mu: np.exp(k**2*(sigma_para**2-sigma_perp**2)*mu**2), mu_0, 1)[0]
     modification /= (1 - mu_0)
