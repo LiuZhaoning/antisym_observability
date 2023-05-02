@@ -7,7 +7,7 @@
 
 NUMCORE=10
 
-zeta='expr 43 * 1.02'
+zeta=42.17
 Tvir=156000
 Rmfp=50
 SMOOTHING_SCALE=300
@@ -24,7 +24,7 @@ python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir 
 SMOOTHING_Pk=300
 python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir $Rmfp $SMOOTHING_SCALE $SMOOTHING_Pk $FILE_NAME $NUMCORE
 
-zeta='expr 43 * 0.98'
+zeta=43.89
 Tvir=156000
 Rmfp=50
 SMOOTHING_SCALE=300
@@ -42,7 +42,7 @@ SMOOTHING_Pk=300
 python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir $Rmfp $SMOOTHING_SCALE $SMOOTHING_Pk $FILE_NAME $NUMCORE
 
 zeta=43
-Tvir='expr 156000 * 1.02'
+Tvir=152600
 Rmfp=50
 SMOOTHING_SCALE=300
 FILE_NAME='fisher_matrix'
@@ -59,7 +59,7 @@ SMOOTHING_Pk=300
 python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir $Rmfp $SMOOTHING_SCALE $SMOOTHING_Pk $FILE_NAME $NUMCORE
 
 zeta=43
-Tvir='expr 156000 * 0.98'
+Tvir=158900
 Rmfp=50
 SMOOTHING_SCALE=300
 FILE_NAME='fisher_matrix'
@@ -77,7 +77,7 @@ python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir 
 
 zeta=43
 Tvir=156000
-Rmfp='expr 50 * 1.02'
+Rmfp=49
 SMOOTHING_SCALE=300
 FILE_NAME='fisher_matrix'
 
@@ -94,7 +94,7 @@ python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir 
 
 zeta=43
 Tvir=156000
-Rmfp='expr 50 * 0.98'
+Rmfp=51
 SMOOTHING_SCALE=300
 FILE_NAME='fisher_matrix'
 

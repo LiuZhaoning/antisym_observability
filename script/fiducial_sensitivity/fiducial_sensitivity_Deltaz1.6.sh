@@ -7,8 +7,8 @@
 
 NUMCORE=10
 
-zeta=43
-Tvir=156000
+zeta=43.03
+Tvir=155700
 Rmfp=50
 SMOOTHING_SCALE=300
 FILE_NAME='fiducial_sensitivity'
