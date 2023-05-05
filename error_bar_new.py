@@ -574,10 +574,10 @@ def fit_nR(kh_array, Pk_A_array, error, MEASURE):
         def LS_PowerLaw_factor(k_local, A_R, n_R): #fit the power law between kh (0.14~0.26)
             func_form = A_R * k_local ** (-n_R)
             return func_form
-        if type(error) == list:
-            popt, pocv = curve_fit(LS_PowerLaw_factor, kh_array, Pk_A_array, sigma = error, absolute_sigma=True, p0 = [Pk_A_array[-1],2])
-        else:
-            popt, pocv = curve_fit(LS_PowerLaw_factor, kh_array, Pk_A_array, p0 = [Pk_A_array[-1],2])
+        #if type(error) == list:
+        popt, pocv = curve_fit(LS_PowerLaw_factor, kh_array, Pk_A_array, sigma = error, absolute_sigma=True, p0 = [Pk_A_array[-1],2])
+        #else:
+        #    popt, pocv = curve_fit(LS_PowerLaw_factor, kh_array, Pk_A_array, p0 = [Pk_A_array[-1],2])
     if (MEASURE == 2):
         Pk_A_fit = [] #fitting in the loglog figure, increase the effect of large k part
         sigma_Pk_A_fit = []
