@@ -1,5 +1,5 @@
 #!/bin/bash  
-#PBS -N fisher_matrix
+#PBS -N FM
 #PBS -V 
 #PBS -lselect=1:ncpus=4:mem=5gb
 #PBS -j oe

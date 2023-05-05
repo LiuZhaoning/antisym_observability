@@ -1,11 +1,11 @@
 #!/bin/bash  
 #PBS -N fiducial_sensitivity_1.6
 #PBS -V 
-#PBS -lselect=1:ncpus=10:mem=5gb
+#PBS -lselect=1:ncpus=3:mem=5gb
 #PBS -j oe
 #PBS -k oe
 
-NUMCORE=10
+NUMCORE=3
 
 zeta=43.03
 Tvir=155700

@@ -1,11 +1,11 @@
 #!/bin/bash  
-#PBS -N general_fisher_matrix
+#PBS -N GFM
 #PBS -V 
-#PBS -lselect=1:ncpus=10:mem=5gb
+#PBS -lselect=1:ncpus=4:mem=5gb
 #PBS -j oe
 #PBS -k oe
 
-NUMCORE=10
+NUMCORE=4
 
 # z_r = 7.336, Delta_z = 1.77
 zeta=32.12
