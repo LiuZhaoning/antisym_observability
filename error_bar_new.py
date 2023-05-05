@@ -5,6 +5,7 @@ import numpy as np
 from scipy import interpolate, integrate  
 from scipy.stats import chi2
 from scipy.special import erfinv, erfcinv
+from scipy.optimize import curve_fit
 #*****************************#
 ## Cosmological Parameters ##
 #*****************************#
@@ -498,16 +499,16 @@ def error_PA_k(z, k, delta_k, t_total_CO, t_total_21, BOX_LEN, NUM_PATCH, delta_
     sigma_PS_k, _ = error_21_CO_cross(k, delta_k, k_limits, PS_k, BOX_LEN, NUM_PATCH)
     sigma_PA_k, _ = error_21_CO_cross(k, delta_k, k_limits, PA_k, BOX_LEN, NUM_PATCH)
     
-    print('sigma_P_k_CO = %5.5g'%sigma_P_k_CO, 'sigma_P_k_CO_cv = %5.5g'%sigma_P_k_CO_cv)
-    print('sigma_P_k_21 = %5.5g'%sigma_P_k_21, 'sigma_P_k_21_cv = %5.5g'%sigma_P_k_21_cv)
-    print('sigma_PS_k = %5.5g'%sigma_PS_k, 'sigma_PA_k = %5.5g'%sigma_PA_k)
+    #print('sigma_P_k_CO = %5.5g'%sigma_P_k_CO, 'sigma_P_k_CO_cv = %5.5g'%sigma_P_k_CO_cv)
+    #print('sigma_P_k_21 = %5.5g'%sigma_P_k_21, 'sigma_P_k_21_cv = %5.5g'%sigma_P_k_21_cv)
+    #print('sigma_PS_k = %5.5g'%sigma_PS_k, 'sigma_PA_k = %5.5g'%sigma_PA_k)
     
     #cosmic variance only
     VAR_PA_k = (9 / 20 / np.pi) * sigma_PA_k**2 + sigma_P_k_21 * sigma_P_k_CO - sigma_PS_k**2
     VAR_PA_k_cv = (9 / 20 / np.pi) * sigma_PA_k**2 + sigma_P_k_21_cv * sigma_P_k_CO_cv - sigma_PS_k**2 #eqn 9 in Tan's draft
     sigma_PA_k, sigma_PA_k_cv = VAR_PA_k**0.5, VAR_PA_k_cv**0.5
     
-    print('sigma_error = %5.5g'%sigma_PA_k, 'sigma_cv = %5.5g'%sigma_PA_k_cv)
+    #print('sigma_error = %5.5g'%sigma_PA_k, 'sigma_cv = %5.5g'%sigma_PA_k_cv)
     return sigma_PA_k, sigma_PA_k_cv
 
 def significance_level(signal_noise_ratio_square_sum, free_degree):
@@ -560,3 +561,111 @@ def maximum_significance_level(kh_array, P_k, sigma_P_k):
             confidence = temp_confidence
             kh_max = kh_array[free_degree]
     return confidence, kh_max
+
+#fit the slope and the amplitude of the antisymmetric curve
+def fit_nR(kh_array, Pk_A_array, error, MEASURE):
+    '''
+    kh_array : h/Mpc, the k index of the antisymmetric power spectrum
+    Pk_A_array : [muK]^2[Mpc/h]^3, the power spectrum
+    error : [muK]^2[Mpc/h]^3, the error of the power spectrum
+    MEASURE : 1 or 2, the way of fitting
+    '''
+    if (MEASURE == 1): #power law fitting
+        def LS_PowerLaw_factor(k_local, A_R, n_R): #fit the power law between kh (0.14~0.26)
+            func_form = A_R * k_local ** (-n_R)
+            return func_form
+        if type(error) == list:
+            popt, pocv = curve_fit(LS_PowerLaw_factor, kh_array, Pk_A_array, sigma = error, absolute_sigma=True, p0 = [Pk_A_array[-1],2])
+        else:
+            popt, pocv = curve_fit(LS_PowerLaw_factor, kh_array, Pk_A_array, p0 = [Pk_A_array[-1],2])
+    if (MEASURE == 2):
+        Pk_A_fit = [] #fitting in the loglog figure, increase the effect of large k part
+        sigma_Pk_A_fit = []
+        for i in range(len(Pk_A_array)):
+            Pk_A_fit.append(np.abs(Pk_A_array[i]))
+            sigma_Pk_A_fit.append(np.abs(error[i]))
+        for i in range(len(Pk_A_fit)):
+            if Pk_A_fit[i] - 0.5 * sigma_Pk_A_fit[i] > 0:
+                sigma_Pk_A_fit[i] = np.log10(Pk_A_fit[i] + 0.5 * sigma_Pk_A_fit[i]) - np.log10(Pk_A_fit[i] - 0.5 * sigma_Pk_A_fit[i])
+            else:
+                sigma_Pk_A_fit[i] = np.log10(sigma_Pk_A_fit[i])
+        def LS_PowerLaw_factor(k_local, A_R, n_R): #fit the power law between kh (0.14~0.26)
+            func_form = A_R * k_local ** (-n_R)
+            return np.log10(func_form)
+        popt, pocv = curve_fit(LS_PowerLaw_factor, kh_array, np.log10(Pk_A_fit), sigma = sigma_Pk_A_fit, absolute_sigma=True, p0 = [np.log10(Pk_A_fit[-1]),2])
+    return [popt[0], popt[1], pocv] #[A_R, n_R, errorbar for A_R, errorbar for n_R]
+    
+#functions for general fisher matrix
+def partial_diriv(matrix1, matrix2, theta1, theta2):
+    '''
+    compute the partial dirivative with respect to the parameter theta
+    '''
+    return (matrix1 - matrix2) / (theta1 - theta2)
+    
+def second_partial_diriv(matrix1, matrix2, matrix3, theta1, theta2, theta3):
+    '''
+    compute the second partial dirivative with respect to the same parameter theta
+    '''
+    dM_dtheta1 = (matrix1 - matrix2) / (theta1 - theta2)
+    theta_dM_dtheta1 = (theta1 + theta2) / 2
+    dM_dtheta2 = (matrix2 - matrix3) / (theta2 - theta3)
+    theta_dM_dtheta2 = (theta2 + theta3) / 2
+    return (dM_dtheta1 - dM_dtheta2) / (theta_dM_dtheta1 - theta_dM_dtheta2)
+    
+def T_matrix(func, X):
+    '''
+    compute the partial dirivative matrix of the model with respect to the input X
+    in our case, the function is the interpolation and X is the slope n_R
+    return the diagonal matrix T
+    '''
+    X_len = len(X)
+    T = np.matrix(np.zeros((X_len, X_len)))
+    for i in range(X_len):
+        partial_diriv = (func(X[i] * 1.01) - func(X[i] * 0.99)) / (X[i] * 0.02)
+        T[i,i] = partial_diriv
+    return T
+
+def generalized_fisher_matrix(X, Y, C_XX, C_XY, C_YY, SIGMA, interp_func_3, Delta_z_3):
+    '''
+    compute the parameter estimation through the generalized fisher matrix of model f(X, Y| Delta_z)
+    X, Y : each array containing a set of measurements, (X_i, Y_i) represent the ith measured data point
+    X : [X_1, X_2, ..., X_N], in our case the slope of the dipole, n_R
+    Y : [Y_1, Y_2, ..., Y_N], in our case the slope of the dipole, A_R
+    C_XX, C_YY : the covariance of X, Y
+    C_XY : the meta-covarance between X and Y
+    SIGMA : the variance of X, a diagonal matrix, C_XX in our case
+    interp_func_3 : [interp1, interp2, interp3], the 3 interpolated function of analytical model points
+    Delta_z_3 : [Delta_z_1, Delta_z_2, Delta_z_3], the 3 EoR duration corresponding to the 3 interpolations
+    '''
+    # the 3 matrix corresponding to the 3
+    mu_3 = [np.matrix([[float(interp_func(X_i))] for X_i in X]) for interp_func in interp_func_3]
+    T_3 = [T_matrix(interp_func, X) for interp_func in interp_func_3]
+    R_3 = [C_YY - C_XY.T * T.T - T * C_XY + T * C_XX * T.T for T in T_3]
+    R = R_3[1] # the data points are on the middle function
+    
+    dR_dDeltaz = partial_diriv(R_3[0], R_3[2], Delta_z_3[0], Delta_z_3[2])
+    dmu_dDeltaz = partial_diriv(mu_3[0], mu_3[2], Delta_z_3[0], Delta_z_3[2])
+    
+    F0_DeltazDeltaz = 0.5 * np.trace(R.I * dR_dDeltaz * R.I * dR_dDeltaz + R.I * (dmu_dDeltaz * dmu_dDeltaz.T + dmu_dDeltaz * dmu_dDeltaz.T) )
+    
+    E = (C_YY - C_XY.T * C_XX.I * C_XY).I
+    H = C_XX.I * C_XY * E
+    G = C_XX.I + C_XX.I * C_XY * E * C_XY.T * C_XX.I
+    
+    F1_term1 = 0 # the 1st term in the first order approximation of Fisher matrix, F1_DeltazDeltaz
+    A_3 = [G + T_3[i].T * E * T_3[i] - H * T_3[i] - T_3[i].T * H.T for i in range(3)]
+    A = A_3[1] # the data points are on the middle function
+    F1_term1 += SIGMA.I * second_partial_diriv(A_3[0].I, A_3[1].I, A_3[2].I, Delta_z_3[0], Delta_z_3[1], Delta_z_3[2])
+    temp_3 = [(H.T - E * T_3[i]) * A_3[i].I * SIGMA.I * A_3[i].I * (H - T_3[i].T * E) for i in range(3)]
+    F1_term1 += second_partial_diriv(temp_3[0], temp_3[1], temp_3[2], Delta_z_3[0], Delta_z_3[1], Delta_z_3[2]) * R
+    F1_term1 = 0.5 * np.trace(F1_term1)
+    
+    #in our case, X = a. So the 2nd and the 3rd term in F1 equals zero
+    
+    F1_term4 = partial_diriv(mu_3[0].T, mu_3[2].T, Delta_z_3[0], Delta_z_3[2]) * temp_3[1] \
+                * partial_diriv(mu_3[0], mu_3[2], Delta_z_3[0], Delta_z_3[2])
+    
+    F1_DeltazDeltaz = F1_term1 + F1_term4[0,0]
+    F_DeltazDeltaz = F0_DeltazDeltaz + F1_DeltazDeltaz
+    
+    return (1 / F_DeltazDeltaz) ** 0.5

@@ -693,3 +693,4 @@ def fit_nR(kh_array, Pk_A_array, MEASURE):
         popt, pocv = curve_fit(LS_PowerLaw_factor, kh_array, np.log10(Pk_A_fit), p0 = [np.log10(Pk_A_fit[-1]),2])
     return [popt[0], popt[1], pocv[0,0] ** 0.5, pocv[1,1] ** 0.5] #[A_R, n_R, errorbar for A_R, errorbar for n_R]
 
+
