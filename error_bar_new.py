@@ -468,8 +468,6 @@ def error_PA_k(z, k, delta_k, t_total_CO, t_total_21, BOX_LEN, NUM_PATCH, delta_
     k : h/Mpc
     delta_k : h/Mpc, the width of the k-shell
     z : the redshift
-    z : redshift
-    
     Omega_patch : [radian]^2, the solid-angle on the sky subtented by a box
     NUM_PATCH : number of patches in a survey
     t_int_CO, t_int_21 : hour, the total integration time of CO and 21cm observation respectively

@@ -127,8 +127,8 @@ def normal_corner(covm,mean,varlabels,fixedvarindex=None,fixedvarvalue=None,
             Y_MIN,Y_MAX = ax.get_ylim()
             ax.vlines(x = mean[pair - 1], ymin = Y_MIN, ymax = Y_MAX, color = 'black', lw = 0.8)
             ax.set_ylim(0, Y_MAX)
-            ax.set_title('$\sigma_\mathrm{min} = %3.3g$'%(covm[pair-1][pair-1]**0.5))
-
+            ax.set_title('$\sigma = %5.3g$'%(covm[pair-1][pair-1]**0.5), fontsize = 12)
+            if pair==2: ax.set_title(r'$\sigma = %3.3g \times 10^4$'%(covm[pair-1][pair-1]**0.5 / 1e4), fontsize = 12)
         if diagnostic==True:
             print('ii, jj ',pair)
             print('Plot idx:',plot_idx)
@@ -146,14 +146,15 @@ def contour_plot_pair(ax,covm,mean,pair,plot_idx,color,lim,varlabels):
     rv_sigma=[]
     #rv_sigma.append( rv.pdf( np.dstack((twomu[0], twomu[1]+3*twocov[1,1]**0.5)) ) )
     #rv_sigma.append( rv.pdf( np.dstack((twomu[0], twomu[1]+2*twocov[1,1]**0.5)) ) )
-    CHI_SQUARE = 2.3
+    CHI_SQUARE_1sigma = 2.3
+    CHI_SQUARE_2sigma = 6.17
     RHO = twocov[0,1] / twocov[0,0]**0.5 / twocov[1,1]**0.5
-    rv_sigma.append( rv.pdf((twomu[0], twomu[1] + np.sqrt(CHI_SQUARE * (1 - RHO*RHO)) * twocov[1,1]**0.5))) #a point on the loop of 1-sigma, Eqn 8 from Coe 2009
-
+    #rv_sigma.append( rv.pdf((twomu[0], twomu[1] + np.sqrt(CHI_SQUARE * (1 - RHO*RHO)) * twocov[1,1]**0.5))) #a point on the loop of 1-sigma, Eqn 8 from Coe 2009
+    rv_sigma.append( rv.pdf((twomu[0], twomu[1] + np.sqrt(CHI_SQUARE_2sigma * (1 - RHO*RHO)) * twocov[1,1]**0.5))) #a point on the loop of 1-sigma, Eqn 8 from Coe 2009
+    rv_sigma.append( rv.pdf((twomu[0], twomu[1] + np.sqrt(CHI_SQUARE_1sigma * (1 - RHO*RHO)) * twocov[1,1]**0.5))) #a point on the loop of 1-sigma, Eqn 8 from Coe 2009
     xvals, yvals = np.mgrid[lim['minvalx']:lim['maxvalx']:.01*(lim['maxvalx']-lim['minvalx']), lim['minvaly']:lim['maxvaly']:.01*(lim['maxvaly']-lim['minvaly'])]
     pos = np.dstack((xvals, yvals))
-
-    cp = ax.contour(xvals, yvals, rv.pdf(pos), rv_sigma, colors=color, linestyles=['solid','dashed','dotted'],linewidths=1)
+    cp = ax.contour(xvals, yvals, rv.pdf(pos), rv_sigma, colors=color, linestyles=['dashed','solid','dotted'],linewidths=1)
     ax = configure_axis(ax,len(mean),plot_idx,varlabels)
 
     return ax, cp
@@ -213,18 +214,24 @@ def configure_axis(ax,N,plot_idx,varlabels):
     '''
     is_left, is_bottom = subplot_type(N,plot_idx)
 
-    ax.tick_params(labelrotation=45)
-
+    ax.tick_params(labelrotation=45, labelsize = 12)
+        
     if not is_left or plot_idx==1:
         ax.set_yticklabels([])
     else:
-        ax.set_ylabel( subplot_label('y',N,plot_idx,varlabels) )
+        ax.set_ylabel( subplot_label('y',N,plot_idx,varlabels) , fontsize = 14)
 
     if not is_bottom:
         ax.set_xticklabels([])
     else:
-        ax.set_xlabel( subplot_label('x',N,plot_idx,varlabels) )
-
+        ax.set_xlabel( subplot_label('x',N,plot_idx,varlabels), fontsize = 14)
+    
+    if plot_idx == 4:
+        ax.set_yticks([6e4, 1e5, 1.4e5])
+        ax.set_yticklabels([r'$6 \times 10^4$', r'$10^5$', r'$1.4 \times 10^5$'], fontsize=12)
+    if plot_idx == 8:
+        ax.set_xticks([6e4, 1e5, 1.4e5])
+        ax.set_xticklabels([r'$6 \times 10^4$', r'$10^5$', r'$1.4 \times 10^5$'], fontsize=12)
     return ax
 
 def subplot_type(N,plot_idx):
