@@ -154,14 +154,22 @@ def MtoR(M):
     return pow(3 * M / (4 * math.pi * rho_bar), 1.0 / 3.0)
 vec_MtoR = np.vectorize(MtoR)
 
-#the mass of bubbles with radius R and average matter density
 def RtoM(R):
+    '''
+    Calculate the mass of bubbles with radius R and average matter density
+    
+    Pamrameter:
+    R : Mpc, the radius of the bubbles
+    Output:
+    M : solarmass, the mass of the bubbles
+    '''
     M = 4.0 / 3.0 * math.pi * pow(R,3) * rho_bar
     return M
 M_max = RtoM(50) #default
 
 #the variance square of the overdensity of bubbles with mass M 
 def S(M):
+    
     R = (M / (6 * np.pi ** 2 * rho_bar)) ** (1.0 / 3) #this R is only for estimation of k-space cutoff
     def integrand(k):
         return power_in_k(k) * k * k;
@@ -196,15 +204,32 @@ def dicke(z):
     dick_0 = 2.5*OMm / ( 1.0/70.0 + OMm*(209-OMm)/140.0 + pow(OMm, 4.0/7.0) )
     return dick_z / (dick_0 * (1.0+z))
 
-#locate the different redshift
-def LOS_distance(z): #the comoving distance from now to the redshift z
+def LOS_distance(z):
+    '''
+    Calculate the comoving distance from us to the redshift z
+    
+    Parameters:
+    z : the redshift we are interested in
+    Output:
+    distance : Mpc , the distance from us to the redshift z
+    '''
     def dchi(z): # dchi = c/H(z) dz
         return speed_C / H_z(z)
     chi = integrate.quad(dchi, 0, z, epsrel = 1e-5)
     return chi[0]
 
-#at redshift z, the function will give the 2 redshift with comoving distance r/2
 def cal_z1_z2(z, r12, theta):
+    '''
+    Calculate the two redshifts, with a middle redshift z, the redshift bin is spaned by a
+    comoving length r12 of angle theta with respect to the line of sight direction
+    
+    Parameters:
+    z : the middle redshift
+    r12 : Mpc , the length span the redshift bin
+    theta : radians , the angle between the length r12 and the line of sight direction
+    Output:
+    z1, z2 : the two redshifts at the border of the redshift bin
+    '''
     def functioin_z1(z1):
         return (LOS_distance(z) - LOS_distance(z1) - r12 * np.cos(theta) / 2)
     def functioin_z2(z2):
@@ -431,12 +456,28 @@ def xH_vol_interp(z, zeta_z_func, T_vir, mu, M_max, BMF_func):
     return xH_volume
 vec_xH_vol_interp = np.vectorize(xH_vol_interp)
 
-#define functions to calculate the average temprature of 21cm and CO
 def T_21_tilde(z): # in muK
+    '''
+    Output the average 21cm temperature at redshift z
+    
+    Parameters:
+    z : the redshift we are interested in
+    Output:
+    tilde{T_21} : muK , the average 21 cm temperature at redshift z
+    '''
     return 27 * ( ((1+z)/10) * (0.15/OMm/hlittle/hlittle)) ** 0.5 * (OMb * hlittle * hlittle / 0.023) *1e3
-
-#the average CO temperature at redshift z   
+ 
 def T_CO_bar(z, T_vir, mu): # in muK
+    '''
+    Output the average CO (1-0) temperature at redshift z
+    
+    Parameters:
+    z : the redshift we are interested in
+    T_vir : K, the virial temperature
+    mu : 1.22 for the neutral IGM case, T_vir < 1e4; 0.6 for the ionized IGM case, T_vir >= 1e4
+    Output:
+    bar{T_CO} : muK , the average CO cm temperature at redshift z
+    '''
     delta_c_z = delta_c / dicke(z)
     M_min = TtoM(z, T_vir, mu)
     f_coll = special.erfc(delta_c_z / (pow(2,0.5) * sigma_z0(M_min)))
@@ -547,9 +588,23 @@ def V0_R1R2(R1, R2, r): #R1 >= R2
     elif R1 > r + R2:
         return 4/3 * np.pi * R2**3
     
-#antisymmetric cross correlation at redshift z with x1,x2 sperated r12 away along LoS
-#assume that the matter distribution freeze at z, only the mass of the bubble increases
 def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu):
+    '''
+    calculate the antisymmetric cross correlation at redshift z with x1,x2 sperated r12 away along LoS
+    assume that the matter distribution freeze at z, only the mass of the bubble increases
+    
+    Parameters:
+    z : the middle redshift of the shell we are interested in
+    r12 : Mpc, the comoving length along the LoS between the antisymmetric cross-correlated two points
+    zeta_z_func : the normalized zeta in the range of redshift we are interested in
+    HIrho_over_rho0_func : the ratio of average density in the neutral region to the total average density
+    BMF_func_z : the bubble mass function at various redshifts
+    M_max : solar mass , the maximum mass limit for the ionized bubbles
+    T_vir : K , the virial temperature
+    mu : 1.22 for the neutral IGM case, T_vir < 1e4; 0.6 for the ionized IGM case, T_vir >= 1e4
+    Output:
+    xi_A_HICO : muK^2 , the antisymmetric cross correlation between the HI and CO field
+    '''
     [z1, z2] = cal_z1_z2(z, r12, 0)
     M_min = zeta_z_func(z) * TtoM(z, T_vir, mu)
     PARA = PARA_z(z, M_max, zeta_z_func, T_vir, mu)
@@ -592,8 +647,22 @@ def xi_A_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
                     * T_21_tilde(z2) * HIrho_over_rho0_func(z2)
     return 0.5 * (xi_HIz1_COz2 - xi_HIz2_COz1) # in muK^2
     
-#compute the symmetric cross-correlation between 21cm and CO(1-0) line
 def xi_S_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu):
+    '''
+    calculate the symmetric cross correlation at redshift z with x1,x2 sperated r12 away along LoS
+    
+    Parameters:
+    z : the middle redshift of the shell we are interested in
+    r12 : Mpc, the comoving length along the LoS between the antisymmetric cross-correlated two points
+    zeta_z_func : the normalized zeta in the range of redshift we are interested in
+    HIrho_over_rho0_func : the ratio of average density in the neutral region to the total average density
+    BMF_func_z : the bubble mass function at various redshifts
+    M_max : solar mass , the maximum mass limit for the ionized bubbles
+    T_vir : K , the virial temperature
+    mu : 1.22 for the neutral IGM case, T_vir < 1e4; 0.6 for the ionized IGM case, T_vir >= 1e4
+    Output:
+    xi_S_HICO : muK^2 , the symmetric cross correlation between the HI and CO field
+    '''
     M_min = zeta_z_func(z) * TtoM(z, T_vir, mu)
     PARA = PARA_z(z, M_max, zeta_z_func, T_vir, mu)
     [s0, B0, B1] = PARA
@@ -613,8 +682,22 @@ def xi_S_HICO(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vi
     xi_HI_CO = - xi_HII_delta * T_CO_bar(z, T_vir, mu) * Bias_CO(z, T_vir, mu) * T_21_tilde(z) * HIrho_over_rho0_func(z)
     return xi_HI_CO # in muK^2
 
-#compute the auto cross-correlation of 21cm
 def xi_auto_21(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_vir, mu):
+    '''
+    calculate the 21 cm auto correlation at redshift z with x1,x2 sperated r12 away along LoS
+    
+    Parameters:
+    z : the middle redshift of the shell we are interested in
+    r12 : Mpc, the comoving length along the LoS between the antisymmetric cross-correlated two points
+    zeta_z_func : the normalized zeta in the range of redshift we are interested in
+    HIrho_over_rho0_func : the ratio of average density in the neutral region to the total average density
+    BMF_func_z : the bubble mass function at various redshifts
+    M_max : solar mass , the maximum mass limit for the ionized bubbles
+    T_vir : K , the virial temperature
+    mu : 1.22 for the neutral IGM case, T_vir < 1e4; 0.6 for the ionized IGM case, T_vir >= 1e4
+    Output:
+    xi_auto_HICO : muK^2 , the auto correlation of the 21 cm field at the redshift z
+    '''
     M_min = zeta_z_func(z) * TtoM(z, T_vir, mu)
     PARA = PARA_z(z, M_max, zeta_z_func, T_vir, mu)
     [s0, B0, B1] = PARA
@@ -637,6 +720,13 @@ def xi_auto_21(z, r12, zeta_z_func, HIrho_over_rho0_func, BMF_func_z, M_max, T_v
     
 #compute the symmetric power spectrum from the cross-correlation function
 def Pk_S(k, xi_S_HICO_func, lower_limit, upper_limit):
+    '''
+    calculate the symmetric cross power spectrum with the corresponding cross correlation
+    
+    Parameters:
+    k : Mpc^{-1} , the k-space index
+    
+    '''
     integrand = lambda r: xi_S_HICO_func(r) * (r * r) * np.sin(k * r) / (k * r)
     Pk = (hlittle ** 3) * 4 * np.pi * integrate.quad(integrand, lower_limit, upper_limit, epsrel = 1e-3)[0]
     return Pk #in muK^2 h^-3 Mpc^3
