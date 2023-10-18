@@ -7,9 +7,9 @@
 
 NUMCORE=10
 
-# z_r = 6.936, Delta_z = 1.65
-zeta=35.82
-Tvir=149000
+# z_r = 6.946, Delta_z = 1.65
+zeta=34.59
+Tvir=152700
 Rmfp=50
 SMOOTHING_SCALE=300
 FILE_NAME='paper3_Zdependence'
@@ -25,9 +25,9 @@ python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir 
 SMOOTHING_Pk=300
 python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir $Rmfp $SMOOTHING_SCALE $SMOOTHING_Pk $FILE_NAME $NUMCORE
 
-# z_r = 6.936, Delta_z = 1.8
-zeta=27.33
-Tvir=110300
+# z_r = 6.946, Delta_z = 1.8
+zeta=26.45
+Tvir=113100
 Rmfp=50
 SMOOTHING_SCALE=300
 FILE_NAME='paper3_Zdependence'
@@ -43,9 +43,9 @@ python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir 
 SMOOTHING_Pk=300
 python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir $Rmfp $SMOOTHING_SCALE $SMOOTHING_Pk $FILE_NAME $NUMCORE
 
-# z_r = 6.936, Delta_z = 1.95
-zeta=21.59
-Tvir=82410
+# z_r = 6.946, Delta_z = 1.95
+zeta=20.94
+Tvir=84530
 Rmfp=50
 SMOOTHING_SCALE=300
 FILE_NAME='paper3_Zdependence'
@@ -62,9 +62,9 @@ SMOOTHING_Pk=300
 python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir $Rmfp $SMOOTHING_SCALE $SMOOTHING_Pk $FILE_NAME $NUMCORE
 
 
-# z_r = 7.736, Delta_z = 1.65
-zeta=45.1
-Tvir=126600
+# z_r = 7.726, Delta_z = 1.65
+zeta=45.66
+Tvir=123500
 Rmfp=50
 SMOOTHING_SCALE=300
 FILE_NAME='paper3_Zdependence'
@@ -80,9 +80,9 @@ python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir 
 SMOOTHING_Pk=300
 python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir $Rmfp $SMOOTHING_SCALE $SMOOTHING_Pk $FILE_NAME $NUMCORE
 
-# z_r = 7.736, Delta_z = 1.8
-zeta=33.96
-Tvir=93530
+# z_r = 7.726, Delta_z = 1.8
+zeta=35.07
+Tvir=91270
 Rmfp=50
 SMOOTHING_SCALE=300
 FILE_NAME='paper3_Zdependence'
@@ -98,9 +98,9 @@ python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir 
 SMOOTHING_Pk=300
 python3 /home/liuzhaoning/antisym_observability/Pk_A_group_class.py $zeta $Tvir $Rmfp $SMOOTHING_SCALE $SMOOTHING_Pk $FILE_NAME $NUMCORE
 
-# z_r = 7.736, Delta_z = 1.95
-zeta=26.52
-Tvir=69780
+# z_r = 7.726, Delta_z = 1.95
+zeta=27.34
+Tvir=68100
 Rmfp=50
 SMOOTHING_SCALE=300
 FILE_NAME='paper3_Zdependence'
