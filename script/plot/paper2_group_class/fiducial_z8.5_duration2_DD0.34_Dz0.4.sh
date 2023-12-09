@@ -1,11 +1,11 @@
 #!/bin/bash  
 #PBS -N 2_group
 #PBS -V 
-#PBS -lselect=1:ncpus=10:mem=5gb
+#PBS -lselect=1:ncpus=20:mem=10gb
 #PBS -j oe
 #PBS -k oe
 
-NUMCORE=10
+NUMCORE=20
 
 # z_r = 8.1, Delta_z = 1.6
 zeta=59.83

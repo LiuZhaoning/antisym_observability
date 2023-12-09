@@ -1,5 +1,5 @@
 #!/bin/bash  
-#PBS -N 3_PMI
+#PBS -N f+l
 #PBS -V 
 #PBS -lselect=1:ncpus=10:mem=5gb
 #PBS -j oe

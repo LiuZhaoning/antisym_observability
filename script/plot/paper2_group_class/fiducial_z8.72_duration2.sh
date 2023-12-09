@@ -1,5 +1,5 @@
 #!/bin/bash  
-#PBS -N 2_group
+#PBS -N 2_group_class
 #PBS -V 
 #PBS -lselect=1:ncpus=10:mem=5gb
 #PBS -j oe
